@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PrepiFY - Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 16px 24px;
+      background: #0f172a;
+      border-bottom: 1px solid #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .brand {
+      color: #bfdbfe;
+    }
+    .brand span {
+      color: #f97316;
+    }
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 2fr 1.5fr;
+      gap: 20px;
+      padding: 20px;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 16px 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+    }
+    .card h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead {
+      background: #0b1120;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #1f2937;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      font-weight: 600;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    tbody tr:hover {
+      background: rgba(15,23,42,0.7);
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    .tag.pending {
+      background: rgba(248, 250, 252, 0.06);
+      color: #facc15;
+      border: 1px solid rgba(250, 204, 21, 0.4);
+    }
+    .tag.verified {
+      background: rgba(22, 163, 74, 0.1);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
+    }
+    button.primary {
+      background: linear-gradient(135deg, #2563eb, #7c2d12);
+      color: #f9fafb;
+    }
+    button.secondary {
+      background: #0b1120;
+      color: #e5e7eb;
+      border: 1px solid #1f2937;
+    }
+    button.small {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+    .table-container {
+      max-height: 420px;
+      overflow: auto;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      row-gap: 8px;
+      font-size: 13px;
+    }
+    .detail-grid div span {
+      color: #9ca3af;
+      font-size: 12px;
+    }
+    .streak-rank {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid #1f2937;
+      background: #020617;
+    }
+    textarea, select, input {
+      width: 100%;
+      background: #020617;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      padding: 8px 10px;
+      color: #e5e7eb;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    textarea:focus, select:focus, input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.6);
+    }
+    .field-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .section {
+      margin-bottom: 12px;
+    }
+    .status-bar {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 8px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="brand">Prepi<span>FY</span> Admin</h1>
+    <div style="font-size:12px; color:#9ca3af;">
+      Manage registrations • Verify students • Send notices
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: Candidate list + registration -->
+    <section class="card">
+      <h2>Candidates & Registrations</h2>
+      <div class="status-bar" id="listStatus">Loading candidates...</div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Attempt Year</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="candidateTableBody">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RIGHT: Details + Notice -->
+    <section class="card">
+      <h2>Candidate Details & Notice</h2>
+
+      <!-- Candidate detail panel -->
+      <div class="section" id="detailSection">
+        <div class="status-bar" id="detailStatus">
+          Select a candidate from the left to view details.
+        </div>
+        <div id="detailContent" style="display:none;">
+          <h3 id="detailName" style="font-size:14px; margin-bottom:8px;"></h3>
+          <div class="streak-rank">
+            <div class="pill" id="rankPill">Rank: N/A</div>
+            <div class="pill" id="streakPill">Streak: N/A</div>
+          </div>
+          <div class="detail-grid">
+            <div><span>Email:</span> <span id="detailEmail"></span></div>
+            <div><span>Contact:</span> <span id="detailContact"></span></div>
+            <div><span>Address:</span> <span id="detailAddress"></span></div>
+            <div><span>Attempt Year:</span> <span id="detailAttempt"></span></div>
+            <div><span>Verified:</span> <span id="detailVerified"></span></div>
+            <div><span>User ID:</span> <span id="detailUserId"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notice section -->
+      <div class="section">
+        <label class="field-label" for="noticeTarget">Send Notice To</label>
+        <select id="noticeTarget">
+          <option value="all">All Students</option>
+          <!-- JS se specific candidates ke liye options add honge -->
+        </select>
+      </div>
+
+      <div class="section">
+        <label class="field-label" for="noticeMessage">Notice Message</label>
+        <textarea id="noticeMessage" rows="4" placeholder="Type important announcement or guidance..."></textarea>
+      </div>
+
+      <div class="section" style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="secondary small" type="button" onclick="clearNotice()">Clear</button>
+        <button class="primary small" type="button" onclick="sendNotice()">Send Notice</button>
+      </div>
+
+      <div class="status-bar" id="noticeStatus"></div>
+    </section>
+  </main>
+
+  <script>
+    // Yahan apna Apps Script Web App URL daalo:
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec';
+
+    let candidates = [];  // Sheet se aane wala data
+    let selectedIndex = null;
+
+    // TODO: BACKEND mein getStudents action banana hoga.
+    // Abhi ke liye structure ready hai:
+    // doGet ?action=getStudents => JSON array of rows.
+
+    async function loadCandidates() {
+      const status = document.getElementById('listStatus');
+      const tbody = document.getElementById('candidateTableBody');
+      status.textContent = 'Loading candidates...';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=getStudents`);
+        const data = await res.json();
+
+        if (!data.success) {
+          status.textContent = data.message || 'Failed to load candidates.';
+          return;
+        }
+
+        candidates = data.students || [];
+        if (!candidates.length) {
+          status.textContent = 'No registrations yet.';
+          return;
+        }
+
+        status.textContent = `${candidates.length} candidates loaded.`;
+        tbody.innerHTML = '';
+
+        const noticeTarget = document.getElementById('noticeTarget');
+        // Reset target dropdown (keep "All" at top)
+        noticeTarget.innerHTML = '<option value="all">All Students</option>';
+
+        candidates.forEach((c, idx) => {
+          const tr = document.createElement('tr');
+
+          const statusTag = document.createElement('span');
+          statusTag.classList.add('tag');
+          if (c.Verified === 'YES') {
+            statusTag.classList.add('verified');
+            statusTag.textContent = 'Verified';
+          } else {
+            statusTag.classList.add('pending');
+            statusTag.textContent = 'Pending';
+          }
+
+          tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${c.Name || ''}</td>
+            <td>${c['Attempt Year'] || ''}</td>
+            <td></td>
+            <td></td>
+          `;
+
+          tr.children[3].appendChild(statusTag);
+
+          const actionsTd = tr.children[4];
+
+          const viewBtn = document.createElement('button');
+          viewBtn.textContent = 'View';
+          viewBtn.className = 'secondary small';
+          viewBtn.onclick = () => showDetails(idx);
+          actionsTd.appendChild(viewBtn);
+
+          const verifyBtn = document.createElement('button');
+          verifyBtn.textContent = 'Verify';
+          verifyBtn.className = 'primary small';
+          verifyBtn.style.marginLeft = '6px';
+          verifyBtn.disabled = c.Verified === 'YES';
+          verifyBtn.onclick = () => verifyCandidate(idx, verifyBtn);
+          actionsTd.appendChild(verifyBtn);
+
+          tbody.appendChild(tr);
+
+          // Notice target dropdown mein add karo
+          if (c.Email) {
+            const opt = document.createElement('option');
+            opt.value = c.Email;
+            opt.textContent = `${c.Name || 'Unknown'} (${c.Email})`;
+            noticeTarget.appendChild(opt);
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Error loading candidates.';
+      }
+    }
+
+    function showDetails(index) {
+      selectedIndex = index;
+      const c = candidates[index];
+      const detailStatus = document.getElementById('detailStatus');
+      const detailContent = document.getElementById('detailContent');
+
+      detailStatus.textContent = '';
+      detailContent.style.display = 'block';
+
+      document.getElementById('detailName').textContent = c.Name || '';
+      document.getElementById('detailEmail').textContent = c.Email || '';
+      document.getElementById('detailContact').textContent = c['Contact Number'] || c.Contact || '';
+      document.getElementById('detailAddress').textContent = c.Address || '';
+      document.getElementById('detailAttempt').textContent = c['Attempt Year'] || '';
+      document.getElementById('detailVerified').textContent = c.Verified || 'NO';
+      document.getElementById('detailUserId').textContent = c['User ID'] || '';
+
+      // Abhi rank & streak sheet me nahi hain, isliye placeholder
+      document.getElementById('rankPill').textContent = 'Rank: N/A';
+      document.getElementById('streakPill').textContent = 'Streak: N/A';
+    }
+
+    async function verifyCandidate(index, buttonEl) {
+      const c = candidates[index];
+      if (!c._rowNumber) {
+        alert('Row number not available for this record.');
+        return;
+      }
+
+      if (!confirm(`Verify ${c.Name}?`)) return;
+
+      buttonEl.disabled = true;
+      buttonEl.textContent = 'Verifying...';
+
+      try {
+        const url = `${SCRIPT_URL}?action=verifyStudent&row=${encodeURIComponent(c._rowNumber)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          alert('Verification successful. Credentials mail sent.');
+          await loadCandidates(); // list refresh
+          if (selectedIndex === index) {
+            showDetails(index);
+          }
+        } else {
+          alert('Error: ' + (data.message || 'Verification failed.'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error during verification.');
+      } finally {
+        buttonEl.disabled = false;
+        buttonEl.textContent = 'Verify';
+      }
+    }
+
+    function clearNotice() {
+      document.getElementById('noticeMessage').value = '';
+      document.getElementById('noticeStatus').textContent = '';
+    }
+
+    async function sendNotice() {
+      const target = document.getElementById('noticeTarget').value;
+      const message = document.getElementById('noticeMessage').value.trim();
+      const status = document.getElementById('noticeStatus');
+
+      if (!message) {
+        status.textContent = 'Please type a notice message.';
+        return;
+      }
+
+      status.textContent = 'Sending notice...';
+
+      try {
+        // BACKEND: sendNotice action banana hoga
+        const url = `${SCRIPT_URL}?action=sendNotice` +
+          `&target=${encodeURIComponent(target)}` +
+          `&message=${encodeURIComponent(message)}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          status.textContent = 'Notice sent successfully.';
+          document.getElementById('noticeMessage').value = '';
+        } else {
+          status.textContent = 'Error: ' + (data.message || 'Failed to send notice.');
+        }
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Error sending notice.';
+      }
+    }
+
+    // Page load
+    document.addEventListener('DOMContentLoaded', loadCandidates);
+  </script>
+</body>
+</html>
