@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PrepiFY – UPSC Daily Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --primary: #1f5f8b;
+      --primary-light: #2e86c1;
+      --background: #f5f7fb;
+      --card-bg: #ffffff;
+      --accent: #ffb703;
+      --danger: #d62828;
+      --success: #2b9348;
+      --text-main: #1f2933;
+      --text-muted: #6b7280;
+      --border-radius: 12px;
+      --shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #e0f2fe, #f5f7fb);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #1f5f8b);
+      color: #fff;
+      padding: 18px 16px 10px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ffb703, #fb8500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #0f172a;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-text h1 {
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-text span {
+      font-size: 11px;
+      color: #cbd5f5;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .countdown-box {
+      background: rgba(15, 23, 42, 0.65);
+      padding: 10px 14px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(8px);
+    }
+
+    .countdown-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #cbd5f5;
+    }
+
+    .countdown-time {
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 253, 0.4);
+      font-size: 12px;
+    }
+
+    .quote-box {
+      margin-top: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border: 1px solid rgba(148, 163, 253, 0.4);
+    }
+
+    .quote-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #a5b4fc;
+    }
+
+    .quote-text {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .quote-author {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    main {
+      max-width: 1040px;
+      margin: 18px auto 32px;
+      padding: 0 14px 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 2.2fr 1.4fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 16px 16px 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(15, 23, 42, 0.04);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .card-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .card-title h2 {
+      font-size: 16px;
+    }
+
+    .card-title span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--text-muted);
+      background: #f9fafb;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      font-size: 13px;
+      background-color: #f9fafb;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease,
+        background-color 0.15s ease;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 68px;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+      background-color: #ffffff;
+    }
+
+    .input-inline {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.12s ease,
+        background-color 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1f5f8b, #2563eb);
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-secondary {
+      background: #f9fafb;
+      color: var(--text-main);
+      border: 1px solid #e5e7eb;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .btn-icon {
+      font-size: 14px;
+    }
+
+    .section {
+      margin-top: 10px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .targets-list {
+      list-style: none;
+      margin-top: 4px;
+      max-height: 170px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .targets-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .targets-list::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 999px;
+    }
+
+    .target-item {
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .target-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .target-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .target-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      align-self: flex-end;
+      text-align: right;
+      min-width: 88px;
+    }
+
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .stat-chip {
+      flex: 1;
+      min-width: 120px;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 8px 10px;
+      border: 1px dashed #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .streak-good {
+      color: var(--success);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .badge-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: linear-gradient(135deg, #fef9c3, #fffbeb);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-pill.gold {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #0f172a;
+      border-color: rgba(234, 179, 8, 0.8);
+    }
+
+    .badge-pill.silver {
+      background: linear-gradient(135deg, #e5e7eb, #f9fafb);
+      color: #111827;
+      border-color: rgba(156, 163, 175, 0.8);
+    }
+
+    .badge-pill.bronze {
+      background: linear-gradient(135deg, #fed7aa, #fdba74);
+      color: #7c2d12;
+      border-color: rgba(248, 153, 112, 0.8);
+    }
+
+    .badge-icon {
+      font-size: 13px;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    .leaderboard-table thead {
+      background: #f9fafb;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+      padding: 7px 6px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    .leaderboard-table th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .rank-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .rank-1 {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .rank-2 {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .rank-3 {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .rank-other {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .rank-update-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .today-date {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-logo">P</div>
+        <div class="brand-text">
+          <h1>PrepiFY</h1>
+          <span>Daily UPSC CSE progress</span>
+        </div>
+      </div>
+
+      <div class="countdown-box">
+        <div class="countdown-label">UPSC CSE Prelims 2026</div>
+        <div class="countdown-time" id="countdown">
+          <span class="pill">Loading…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <div class="quote-title">LBSNAA & UPSC spirit</div>
+      <div class="quote-text" id="quote-text">
+        Building future civil servants, one focused day at a time.
+      </div>
+      <div class="quote-author" id="quote-author">
+        – PrepiFY
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- Left: Daily Tracker -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Today's Study Tracker</h2>
+            <span>Log your targets, topics, and reading time</span>
+          </div>
+          <span class="chip" id="today-date-chip">Today</span>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Add your study log</div>
+          <div class="form-row">
+            <div class="input-inline" style="flex: 2;">
+              <label for="targets-input">Today's targets completed</label>
+              <textarea id="targets-input" placeholder="E.g. Polity – Fundamental Rights, Laxmikanth Ch. 6; Economy – Inflation basics"></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="input-inline">
+              <label for="topics-input">Topics covered (short)</label>
+              <input id="topics-input" type="text" placeholder="E.g. FRs, DPSP, Inflation, WPI, CPI" />
+            </div>
+            <div class="input-inline">
+              <label for="time-input">Total study time (hours)</label>
+              <input id="time-input" type="number" min="0" step="0.25" placeholder="E.g. 6.5" />
+            </div>
+          </div>
+          <div class="form-row" style="justify-content: flex-end;">
+            <button class="btn-secondary" id="clear-today-btn">
+              <span class="btn-icon">↺</span> Clear today
+            </button>
+            <button class="btn-primary" id="save-log-btn">
+              <span class="btn-icon">✔</span> Save today & update streak
+            </button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Last 7 days logs</div>
+          <ul class="targets-list" id="logs-list"></ul>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Your streak & stats</div>
+          <div class="stats-row">
+            <div class="stat-chip">
+              <span class="stat-label">Current streak</span>
+              <span class="stat-value streak-good" id="streak-value">0 days</span>
+            </div>
+            <div class="stat-chip">
+              <span class="stat-label">Best streak</span>
+              <span class="stat-value" id="best-streak-value">0 days</span>
+            </div>
+            <div class="stat-chip">
+              <span class="stat-label">Total study time</span>
+              <span class="stat-value" id="total-time-value">0 hrs</span>
+            </div>
+          </div>
+
+          <div class="badge-row" id="badge-row">
+            <!-- Badges will be injected here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Leaderboard & Rank -->
+      <aside class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <h2>Your Rank & Badges</h2>
+            <span>Updated every 2 days based on time + targets</span>
+          </div>
+          <span class="chip" id="next-rank-update">Rank refresh: calculating…</span>
+        </div>
+
+        <p class="tagline">
+          PrepiFY simulates a simple leaderboard based on your own discipline –
+          perfect for solo preparation and accountability.
+        </p>
+
+        <div class="section">
+          <div class="section-title">Leaderboard snapshot</div>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Candidate</th>
+                <th>Study hrs</th>
+                <th>Days logged</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <!-- Rows injected via JS -->
+            </tbody>
+          </table>
+          <p class="rank-update-info" id="rank-note">
+            Ranks are recalculated every 2 days using your total study hours
+            and number of daily logs.
+          </p>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Rank badges</div>
+          <div class="badge-row">
+            <span class="badge-pill gold">
+              <span class="badge-icon">🏅</span> Gold Achiever (Top Rank)
+            </span>
+            <span class="badge-pill silver">
+              <span class="badge-icon">🥈</span> Silver Scholar
+            </span>
+            <span class="badge-pill bronze">
+              <span class="badge-icon">🥉</span> Bronze Aspirant
+            </span>
+            <span class="badge-pill">
+              <span class="badge-icon">📘</span> Consistent Learner
+            </span>
+          </div>
+        </div>
+
+        <p class="footer-note">
+          Tip: Fill this log honestly every night, just like your future LBSNAA
+          discipline.
+        </p>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const PRELIMS_DATE = new Date("2026-05-24T00:00:00+05:30"); // UPSC CSE Prelims 2026 date
+    const STORAGE_KEY = "prepify_logs_v1";
+    const META_KEY = "prepify_meta_v1";
+
+    function formatDateKey(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function formatDisplayDate(date) {
+      return date.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short"
+      });
+    }
+
+    function loadLogs() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveLogs(logs) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    }
+
+    function loadMeta() {
+      try {
+        const stored = localStorage.getItem(META_KEY);
+        return stored
+          ? JSON.parse(stored)
+          : { bestStreak: 0, lastRankUpdate: null, pseudoRank: 4 };
+      } catch (e) {
+        return { bestStreak: 0, lastRankUpdate: null, pseudoRank: 4 };
+      }
+    }
+
+    function saveMeta(meta) {
+      localStorage.setItem(META_KEY, JSON.stringify(meta));
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = PRELIMS_DATE - now;
+
+      const container = document.getElementById("countdown");
+      if (diff <= 0) {
+        container.innerHTML =
+          '<span class="pill">Prelims 2026 in progress / completed</span>';
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff / (1000 * 60 * 60)) % 24
+      );
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+      container.innerHTML = `
+        <span class="pill">${days} days</span>
+        <span class="pill">${hours} hrs</span>
+        <span class="pill">${minutes} mins</span>
+      `;
+    }
+
+    function renderToday() {
+      const today = new Date();
+      const dateKey = formatDateKey(today);
+      const logs = loadLogs();
+      const log = logs[dateKey];
+
+      document.getElementById("today-date-chip").textContent =
+        "Today • " + formatDisplayDate(today);
+      document.getElementById("today-date-chip").title =
+        "Daily trackers are linked to your device date.";
+
+      if (log) {
+        document.getElementById("targets-input").value = log.targets || "";
+        document.getElementById("topics-input").value = log.topics || "";
+        document.getElementById("time-input").value = log.hours || "";
+      } else {
+        document.getElementById("targets-input").value = "";
+        document.getElementById("topics-input").value = "";
+        document.getElementById("time-input").value = "";
+      }
+    }
+
+    function calculateStreaks(logs) {
+      const keys = Object.keys(logs).sort();
+      if (keys.length === 0) {
+        return { currentStreak: 0, bestStreak: 0, totalHours: 0, daysLogged: 0 };
+      }
+
+      let currentStreak = 0;
+      let bestStreak = 0;
+      let totalHours = 0;
+      let daysLogged = keys.length;
+
+      const today = new Date();
+      const todayKey = formatDateKey(today);
+
+      const setKeys = new Set(keys);
+      function hasLogFor(date) {
+        return setKeys.has(formatDateKey(date));
+      }
+
+      let cursor = new Date(todayKey + "T00:00:00");
+
+      if (!hasLogFor(cursor)) {
+        const yesterday = new Date(cursor);
+        yesterday.setDate(yesterday.getDate() - 1);
+        cursor = yesterday;
+      }
+
+      while (hasLogFor(cursor)) {
+        currentStreak += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      let lastDate = null;
+      let run = 0;
+      keys.forEach((key) => {
+        const entry = logs[key];
+        const h = Number(entry.hours || 0);
+        if (!Number.isNaN(h)) totalHours += h;
+
+        const d = new Date(key + "T00:00:00");
+        if (!lastDate) {
+          run = 1;
+        } else {
+          const diffDays =
+            (d - lastDate) / (1000 * 60 * 60 * 24);
+          run = diffDays === 1 ? run + 1 : 1;
+        }
+        if (run > bestStreak) bestStreak = run;
+        lastDate = d;
+      });
+
+      return { currentStreak, bestStreak, totalHours, daysLogged };
+    }
+
+    function renderStats() {
+      const logs = loadLogs();
+      const meta = loadMeta();
+      const stats = calculateStreaks(logs);
+
+      document.getElementById("streak-value").textContent =
+        stats.currentStreak + " days";
+      document.getElementById("best-streak-value").textContent =
+        (meta.bestStreak || stats.bestStreak) + " days";
+      document.getElementById("total-time-value").textContent =
+        stats.totalHours.toFixed(1) + " hrs";
+
+      if (stats.bestStreak > (meta.bestStreak || 0)) {
+        meta.bestStreak = stats.bestStreak;
+        saveMeta(meta);
+        document.getElementById("best-streak-value").textContent =
+          stats.bestStreak + " days";
+      }
+
+      renderBadges(stats);
+      renderLeaderboard(stats, meta);
+      renderRankUpdate(meta);
+    }
+
+    function getRankFromScore(score) {
+      if (score >= 200) return 1;
+      if (score >= 120) return 2;
+      if (score >= 60) return 3;
+      return 4;
+    }
+
+    function describeRank(rank) {
+      switch (rank) {
+        case 1:
+          return "All India Rank 1 (Simulated)";
+        case 2:
+          return "All India Rank 2–10 (Simulated)";
+        case 3:
+          return "All India Rank 11–50 (Simulated)";
+        default:
+          return "All India Rank 51+ (Simulated)";
+      }
+    }
+
+    function renderLeaderboard(stats, meta) {
+      const tbody = document.getElementById("leaderboard-body");
+      tbody.innerHTML = "";
+
+      const score = stats.totalHours * 5 + stats.daysLogged * 2;
+      const rank = getRankFromScore(score);
+      meta.pseudoRank = rank;
+      saveMeta(meta);
+
+      const rows = [];
+
+      const userRow = {
+        rank,
+        name: "You (PrepiFY)",
+        hours: stats.totalHours.toFixed(1),
+        days: stats.daysLogged,
+      };
+
+      const mockRows = [
+        { rank: 1, name: "Aspirant A", hours: 240, days: 90 },
+        { rank: 2, name: "Aspirant B", hours: 180, days: 70 },
+        { rank: 3, name: "Aspirant C", hours: 130, days: 60 },
+      ];
+
+      const allRows = [...mockRows, userRow].sort((a, b) => a.rank - b.rank);
+
+      allRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        const rankClass =
+          row.rank === 1
+            ? "rank-1"
+            : row.rank === 2
+            ? "rank-2"
+            : row.rank === 3
+            ? "rank-3"
+            : "rank-other";
+        tr.innerHTML = `
+          <td>
+            <span class="rank-pill ${rankClass}">
+              #${row.rank}
+            </span>
+          </td>
+          <td>${row.name}</td>
+          <td>${row.hours}</td>
+          <td>${row.days}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById(
+        "rank-note"
+      ).textContent = `Your simulated UPSC-style rank is currently: ${describeRank(
+        rank
+      )}. Rank refresh is scheduled every 2 days based on your updated logs.`;
+    }
+
+    function renderBadges(stats) {
+      const badgeRow = document.getElementById("badge-row");
+      badgeRow.innerHTML = "";
+
+      const score = stats.totalHours * 5 + stats.daysLogged * 2;
+      const rank = getRankFromScore(score);
+
+      if (rank === 1) {
+        badgeRow.innerHTML += `
+          <span class="badge-pill gold">
+            <span class="badge-icon">🏅</span> Gold Achiever
+          </span>
+        `;
+      } else if (rank === 2) {
+        badgeRow.innerHTML += `
+          <span class="badge-pill silver">
+            <span class="badge-icon">🥈</span> Silver Scholar
+          </span>
+        `;
+      } else if (rank === 3) {
+        badgeRow.innerHTML += `
+          <span class="badge-pill bronze">
+            <span class="badge-icon">🥉</span> Bronze Aspirant
+          </span>
+        `;
+      } else {
+        badgeRow.innerHTML += `
+          <span class="badge-pill">
+            <span class="badge-icon">📘</span> Consistent Learner
+          </span>
+        `;
+      }
+
+      if (stats.currentStreak >= 30) {
+        badgeRow.innerHTML += `
+          <span class="badge-pill">
+            <span class="badge-icon">🔥</span> 30-Day Streak
+          </span>
+        `;
+      } else if (stats.currentStreak >= 7) {
+        badgeRow.innerHTML += `
+          <span class="badge-pill">
+            <span class="badge-icon">🔥</span> 7-Day Streak
+          </span>
+        `;
+      }
+    }
+
+    function renderLogsList() {
+      const logs = loadLogs();
+      const list = document.getElementById("logs-list");
+      list.innerHTML = "";
+
+      const today = new Date();
+      const daysToShow = 7;
+      for (let i = 0; i < daysToShow; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const key = formatDateKey(d);
+        const log = logs[key];
+        if (!log) continue;
+
+        const item = document.createElement("li");
+        item.className = "target-item";
+
+        item.innerHTML = `
+          <div class="target-main">
+            <div><strong>${log.topics || "Targets logged"}</strong></div>
+            <div class="target-date">${formatDisplayDate(d)}</div>
+            <div>${(log.targets || "").slice(0, 160)}${
+          log.targets && log.targets.length > 160 ? "…" : ""
+        }</div>
+          </div>
+          <div class="target-meta">
+            <div><strong>${(log.hours || 0).toFixed
+              ? log.hours.toFixed(1)
+              : Number(log.hours || 0).toFixed(1)} hrs</strong></div>
+            <div>Logged</div>
+          </div>
+        `;
+        list.appendChild(item);
+      }
+
+      if (!list.children.length) {
+        const empty = document.createElement("li");
+        empty.className = "target-item";
+        empty.innerHTML =
+          '<div class="target-main"><div><strong>No logs yet.</strong></div><div class="target-date">Start with today and build your first streak.</div></div>';
+        list.appendChild(empty);
+      }
+    }
+
+    function saveTodayLog() {
+      const today = new Date();
+      const key = formatDateKey(today);
+      const logs = loadLogs();
+
+      const targets = document.getElementById("targets-input").value.trim();
+      const topics = document.getElementById("topics-input").value.trim();
+      const timeStr = document.getElementById("time-input").value.trim();
+      const hours = timeStr ? Number(timeStr) : 0;
+
+      if (!targets && !topics && !hours) {
+        alert(
+          "Please fill at least one field (targets, topics, or time) before saving."
+        );
+        return;
+      }
+
+      logs[key] = {
+        targets,
+        topics,
+        hours: Number.isNaN(hours) ? 0 : hours,
+      };
+      saveLogs(logs);
+
+      renderLogsList();
+      renderStats();
+      alert("Today's log saved. Streaks, rank, and badges updated.");
+    }
+
+    function clearToday() {
+      const today = new Date();
+      const key = formatDateKey(today);
+      const logs = loadLogs();
+      if (logs[key]) {
+        if (
+          confirm(
+            "This will remove today's log from this device. Are you sure?"
+          )
+        ) {
+          delete logs[key];
+          saveLogs(logs);
+          renderToday();
+          renderLogsList();
+          renderStats();
+        }
+      } else {
+        document.getElementById("targets-input").value = "";
+        document.getElementById("topics-input").value = "";
+        document.getElementById("time-input").value = "";
+      }
+    }
+
+    function renderRankUpdate(meta) {
+      const now = new Date();
+      let last = meta.lastRankUpdate ? new Date(meta.lastRankUpdate) : null;
+
+      if (!last) {
+        last = now;
+        meta.lastRankUpdate = last.toISOString();
+        saveMeta(meta);
+      }
+
+      const next = new Date(last);
+      next.setDate(next.getDate() + 2);
+
+      const diffMs = next - now;
+      const chip = document.getElementById("next-rank-update");
+      if (diffMs <= 0) {
+        meta.lastRankUpdate = now.toISOString();
+        saveMeta(meta);
+        chip.textContent = "Rank refreshed now";
+      } else {
+        const diffDays = Math.floor(
+          diffMs / (1000 * 60 * 60 * 24)
+        );
+        const diffHours = Math.floor(
+          (diffMs / (1000 * 60 * 60)) % 24
+        );
+        chip.textContent = `Next in ${diffDays}d ${diffHours}h`;
+      }
+    }
+
+    async function fetchDailyQuote() {
+      const quoteTextEl = document.getElementById("quote-text");
+      const quoteAuthorEl = document.getElementById("quote-author");
+
+      try {
+        const res = await fetch("https://zenquotes.io/api/today");
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const q = data[0];
+        let text = q.q || "";
+        const author = q.a || "Unknown";
+
+        const hint =
+          "Remember: every page you read today is a step closer to LBSNAA.";
+        if (text.length > 120) {
+          text = text.slice(0, 120) + "… " + hint;
+        } else {
+          text = text + " " + hint;
+        }
+
+        quoteTextEl.textContent = text;
+        quoteAuthorEl.textContent = "– " + author;
+      } catch (e) {
+        quoteTextEl.textContent =
+          "Somewhere in Mussoorie, a future officer is also reading tonight. Stay at your desk a little longer.";
+        quoteAuthorEl.textContent = "– LBSNAA spirit";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateCountdown();
+      setInterval(updateCountdown, 60 * 1000);
+
+      const today = new Date();
+      document.getElementById("today-date-chip").dataset.date =
+        formatDateKey(today);
+
+      renderToday();
+      renderLogsList();
+      renderStats();
+      fetchDailyQuote();
+
+      document
+        .getElementById("save-log-btn")
+        .addEventListener("click", saveTodayLog);
+      document
+        .getElementById("clear-today-btn")
+        .addEventListener("click", clearToday);
+    });
+  </script>
+</body>
+</html>
