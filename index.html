@@ -4,106 +4,195 @@
   <meta charset="UTF-8">
   <title>PrepiFY - Login Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: #ffffff;
+      padding: 24px 16px;
+      color: #f9fafb;
       background:
-        linear-gradient(135deg, rgba(0,0,0,0.7), rgba(15,23,42,0.9)),
-        radial-gradient(circle at top left, #1d4ed8 0, transparent 55%),
-        radial-gradient(circle at bottom right, #f97316 0, transparent 55%),
-        linear-gradient(135deg, #020617 0%, #0f172a 40%, #111827 100%);
+        radial-gradient(circle at top left, rgba(59,130,246,0.55) 0, transparent 55%),
+        radial-gradient(circle at bottom right, rgba(249,115,22,0.55) 0, transparent 55%),
+        linear-gradient(135deg, #020617 0%, #020617 40%, #0b1120 100%);
       background-attachment: fixed;
       position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Floating gradient orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.7;
+      z-index: -1;
+    }
+    .orb.orb-1 {
+      width: 260px;
+      height: 260px;
+      top: -40px;
+      left: -40px;
+      background: radial-gradient(circle, #60a5fa, transparent 60%);
+    }
+    .orb.orb-2 {
+      width: 320px;
+      height: 320px;
+      bottom: -60px;
+      right: -40px;
+      background: radial-gradient(circle, #fb923c, transparent 65%);
+    }
+
+    /* Top main PrepiFY heading */
+    .main-brand {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .main-brand h1 {
+      font-size: clamp(46px, 6vw, 64px);
+      letter-spacing: 3px;
+      text-shadow: 0 12px 30px rgba(0,0,0,0.7);
+      font-weight: 800;
+    }
+
+    .main-brand .prepi {
+      color: #bfdbfe;
+    }
+
+    .main-brand .fy {
+      color: #f97316;
+    }
+
+    .main-tagline {
+      margin-top: 8px;
+      font-size: 15px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #e5e7eb;
+      opacity: 0.9;
+    }
+
+    .main-subtagline {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #9ca3af;
+      font-style: italic;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       width: 100%;
       display: grid;
       grid-template-columns: 1.2fr 1fr;
       gap: 40px;
-      align-items: center;
+      align-items: stretch;
+      margin-top: 26px;
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 880px) {
       .container {
         grid-template-columns: 1fr;
-        text-align: center;
       }
     }
 
-    .heading-main {
-      text-align: center;
-      margin-bottom: 20px;
+    .left-block {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .heading-main h1 {
-      font-size: 52px;
-      letter-spacing: 2px;
-      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
-    }
-
-    .heading-main .prepi {
-      color: #bfdbfe;
-    }
-
-    .heading-main .fy {
-      color: #f97316;
-    }
-
-    .tagline {
-      margin-top: 8px;
-      font-size: 16px;
-      color: #e5e7ff;
-      font-style: italic;
+    .left-block-inner {
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.6));
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.45);
+      padding: 20px 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      backdrop-filter: blur(18px);
     }
 
     .hindi-line {
-      margin-top: 18px;
       font-size: 20px;
-      line-height: 1.5;
+      line-height: 1.6;
       font-weight: 600;
       color: #f9fafb;
+      margin-bottom: 16px;
     }
 
-    .left-block {
-      padding: 16px;
+    .upsc-tagline {
+      margin-top: 8px;
+      font-size: 15px;
+      color: #cbd5f5;
+    }
+
+    .upsc-highlight {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #f97316;
+      background: rgba(15,23,42,0.9);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(249,115,22,0.55);
     }
 
     .right-block {
       display: flex;
       justify-content: center;
+      align-items: center;
     }
 
     .card {
-      background: rgba(15,23,42,0.96);
-      padding: 28px 26px;
-      border-radius: 18px;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+      background: radial-gradient(circle at top left, rgba(148,163,184,0.1), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(59,130,246,0.18), transparent 55%),
+                  rgba(15,23,42,0.95);
+      padding: 26px 24px;
+      border-radius: 20px;
+      box-shadow: 0 26px 80px rgba(0,0,0,0.8);
       max-width: 420px;
       width: 100%;
       border: 1px solid rgba(148,163,184,0.45);
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(249,115,22,0.06));
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 2;
     }
 
     .card h2 {
       font-size: 18px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-weight: 600;
     }
 
     .card p.sub {
       font-size: 13px;
       color: #cbd5f5;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     .form-group {
@@ -118,37 +207,42 @@
       font-size: 13px;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       padding: 10px 12px;
       border-radius: 10px;
       border: 1px solid #1e293b;
-      background: rgba(15,23,42,0.95);
+      background: rgba(15,23,42,0.96);
       color: #e5e7eb;
       font-size: 13px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.08s ease;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       outline: none;
       border-color: #60a5fa;
       box-shadow: 0 0 0 2px rgba(96,165,250,0.3);
+      transform: translateY(-1px);
     }
 
     .btn {
       width: 100%;
-      padding: 10px 12px;
+      padding: 11px 12px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
       font-weight: 600;
       font-size: 14px;
       margin-top: 6px;
-      transition: all 0.2s;
+      transition: all 0.18s ease;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #1d4ed8 0%, #7c2d12 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 40%, #f97316 100%);
       color: #ffffff;
+      box-shadow: 0 14px 36px rgba(30,64,175,0.7);
     }
 
     .btn-secondary {
@@ -158,8 +252,8 @@
     }
 
     .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 24px rgba(15,23,42,0.6);
+      transform: translateY(-1.5px);
+      box-shadow: 0 16px 40px rgba(15,23,42,0.8);
     }
 
     .divider {
@@ -169,12 +263,13 @@
       font-size: 12px;
       position: relative;
     }
+
     .divider::before,
     .divider::after {
       content: "";
       position: absolute;
       top: 50%;
-      width: 40%;
+      width: 38%;
       height: 1px;
       background: #374151;
     }
@@ -188,6 +283,7 @@
       font-size: 12px;
       display: none;
     }
+
     .message.success {
       background: #d4edda;
       color: #155724;
@@ -210,6 +306,7 @@
       justify-content: center;
       padding: 16px;
     }
+
     .modal-content {
       background: #020617;
       border-radius: 14px;
@@ -219,6 +316,7 @@
       border: 1px solid #1f2937;
       overflow: hidden;
     }
+
     .modal-header {
       padding: 14px 18px;
       background: linear-gradient(135deg, #1d4ed8, #7c2d12);
@@ -227,60 +325,93 @@
       align-items: center;
       color: #f9fafb;
     }
+
     .modal-header h3 {
       font-size: 16px;
     }
+
     .modal-body {
       padding: 16px 18px 18px;
     }
+
     .close {
       font-size: 22px;
       cursor: pointer;
+    }
+
+    /* Small screen tweaks */
+    @media (max-width: 600px) {
+      .left-block-inner {
+        text-align: left;
+      }
+      .card {
+        padding: 22px 18px;
+      }
     }
   </style>
 </head>
 <body>
 
+  <!-- Gradient orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- Main PrepiFY brand at very top center -->
+  <header class="main-brand">
+    <h1><span class="prepi">Prepi</span><span class="fy">FY</span></h1>
+    <p class="main-tagline">Empowering minds, building futures</p>
+    <p class="main-subtagline">
+      Focused guidance for serious UPSC CSE aspirants, from first step to LBSNAA.
+    </p>
+  </header>
+
   <div class="container">
-    <!-- LEFT: Heading & Tagline -->
+    <!-- LEFT: Hindi motivational block -->
     <div class="left-block">
-      <div class="heading-main">
-        <h1><span class="prepi">Prepi</span><span class="fy">FY</span></h1>
-        <p class="tagline">Empowering minds, building futures</p>
+      <div class="left-block-inner">
         <p class="hindi-line">
           पढ़ लो चाहे कहीं से,<br>
           मंज़िल का रास्ता मिलेगा यहीं से।
         </p>
+        <p class="upsc-tagline">
+          हर सुबह का ये वादा, <strong>LBSNAA</strong> तक तुम्हारा साथ निभाएंगे;<br>
+          सपने IAS के हैं तो तैयारी भी वैसी ही होनी चाहिए।
+        </p>
+        <span class="upsc-highlight">
+          UPSC CSE • One stop prep hub
+        </span>
       </div>
     </div>
 
     <!-- RIGHT: Login / Admin -->
     <div class="right-block">
       <div class="card">
-        <h2>Login to access your personalised dashboard</h2>
-        <p class="sub">Enter your User ID (contact number) and password.</p>
+        <div class="card-content">
+          <h2>Login to your personalised dashboard</h2>
+          <!-- Line 2 & 3 text removed as requested -->
 
-        <div id="messageBox" class="message"></div>
+          <div id="messageBox" class="message"></div>
 
-        <!-- Student Login Form -->
-        <form id="loginForm" onsubmit="handleLogin(event)">
-          <div class="form-group">
-            <label for="userId">User ID (Contact Number)</label>
-            <input type="text" id="userId" required>
+          <!-- Student Login Form -->
+          <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="userId">User ID (Contact Number)</label>
+              <input type="text" id="userId" required>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+          </form>
+
+          <div class="divider">OR</div>
+
+          <button class="btn btn-secondary" type="button" onclick="openRegistrationModal()">Register Here</button>
+
+          <div style="margin-top: 14px;">
+            <button class="btn btn-secondary" type="button" onclick="openAdminModal()">Admin Login</button>
           </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" required>
-          </div>
-          <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-
-        <div class="divider">OR</div>
-
-        <button class="btn btn-secondary" type="button" onclick="openRegistrationModal()">Register Here</button>
-
-        <div style="margin-top: 14px;">
-          <button class="btn btn-secondary" type="button" onclick="openAdminModal()">Admin Login</button>
         </div>
       </div>
     </div>
@@ -351,7 +482,6 @@
   </div>
 
   <script>
-    // Yahan tumhara Apps Script Web App URL:
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec';
 
     function showMessage(text, type) {
@@ -362,7 +492,6 @@
       setTimeout(() => { box.style.display = 'none'; }, 5000);
     }
 
-    // Registration modal controls
     function openRegistrationModal() {
       document.getElementById('registrationModal').style.display = 'flex';
     }
@@ -371,7 +500,6 @@
       document.getElementById('registrationForm').reset();
     }
 
-    // Admin modal controls
     function openAdminModal() {
       document.getElementById('adminModal').style.display = 'flex';
     }
@@ -380,7 +508,6 @@
       document.getElementById('adminLoginForm').reset();
     }
 
-    // Close modals on outside click
     window.addEventListener('click', function(e) {
       const reg = document.getElementById('registrationModal');
       const adm = document.getElementById('adminModal');
@@ -388,7 +515,6 @@
       if (e.target === adm) adm.style.display = 'none';
     });
 
-    // Student registration
     function handleRegistration(event) {
       event.preventDefault();
 
@@ -429,7 +555,6 @@
         });
     }
 
-    // Student login
     function handleLogin(event) {
       event.preventDefault();
 
@@ -470,7 +595,6 @@
         });
     }
 
-    // Admin login
     function handleAdminLogin(event) {
       event.preventDefault();
 
