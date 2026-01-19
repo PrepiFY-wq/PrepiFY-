@@ -673,604 +673,542 @@
     </div>
   </main>
 
-  <script>
-    const PRELIMS_DATE = new Date("2026-05-24T00:00:00+05:30");
-    const STORAGE_KEY = "prepify_logs_v1";
-    const META_KEY = "prepify_meta_v1";
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec";
 
-    function formatDateKey(date) {
-      return date.toISOString().slice(0, 10);
+  const PRELIMS_DATE = new Date("2026-05-24T00:00:00+05:30");
+  const STORAGE_KEY = "prepify_logs_v1";
+  const META_KEY = "prepify_meta_v1";
+
+  function formatDateKey(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function formatDisplayDate(date) {
+    return date.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short"
+    });
+  }
+
+  function loadLogs() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveLogs(logs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  }
+
+  function loadMeta() {
+    try {
+      const stored = localStorage.getItem(META_KEY);
+      return stored
+        ? JSON.parse(stored)
+        : { bestStreak: 0, lastRankUpdate: null, pseudoRank: 4 };
+    } catch (e) {
+      return { bestStreak: 0, lastRankUpdate: null, pseudoRank: 4 };
+    }
+  }
+
+  function saveMeta(meta) {
+    localStorage.setItem(META_KEY, JSON.stringify(meta));
+  }
+
+  function updateCountdown() {
+    const now = new Date();
+    const diff = PRELIMS_DATE - now;
+
+    const container = document.getElementById("countdown");
+    if (diff <= 0) {
+      container.innerHTML =
+        '<span class="pill">Prelims 2026 in progress / completed</span>';
+      return;
     }
 
-    function formatDisplayDate(date) {
-      return date.toLocaleDateString("en-IN", {
-        weekday: "short",
-        day: "2-digit",
-        month: "short"
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+    container.innerHTML = `
+      <span class="pill">${days} days</span>
+      <span class="pill">${hours} hrs</span>
+      <span class="pill">${minutes} mins</span>
+    `;
+  }
+
+  function renderToday() {
+    const today = new Date();
+    const dateKey = formatDateKey(today);
+    const logs = loadLogs();
+    const log = logs[dateKey];
+
+    document.getElementById("today-date-chip").textContent =
+      "Today • " + formatDisplayDate(today);
+    document.getElementById("today-date-chip").title =
+      "Daily trackers are linked to your device date.";
+
+    document.getElementById("targets-input").value = log ? (log.targets || "") : "";
+    document.getElementById("topics-input").value = log ? (log.topics || "") : "";
+    document.getElementById("time-input").value = log ? (log.hours || "") : "";
+  }
+
+  function calculateStreaks(logs) {
+    const keys = Object.keys(logs).sort();
+    if (keys.length === 0) {
+      return { currentStreak: 0, bestStreak: 0, totalHours: 0, daysLogged: 0 };
+    }
+
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let totalHours = 0;
+    let daysLogged = keys.length;
+
+    const today = new Date();
+    const todayKey = formatDateKey(today);
+    const setKeys = new Set(keys);
+
+    function hasLogFor(date) {
+      return setKeys.has(formatDateKey(date));
+    }
+
+    let cursor = new Date(todayKey + "T00:00:00");
+
+    if (!hasLogFor(cursor)) {
+      const yesterday = new Date(cursor);
+      yesterday.setDate(yesterday.getDate() - 1);
+      cursor = yesterday;
+    }
+
+    while (hasLogFor(cursor)) {
+      currentStreak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    let lastDate = null;
+    let run = 0;
+    keys.forEach((key) => {
+      const entry = logs[key];
+      const h = Number(entry.hours || 0);
+      if (!Number.isNaN(h)) totalHours += h;
+
+      const d = new Date(key + "T00:00:00");
+      if (!lastDate) {
+        run = 1;
+      } else {
+        const diffDays = (d - lastDate) / (1000 * 60 * 60 * 24);
+        run = diffDays === 1 ? run + 1 : 1;
+      }
+      if (run > bestStreak) bestStreak = run;
+      lastDate = d;
+    });
+
+    return { currentStreak, bestStreak, totalHours, daysLogged };
+  }
+
+  function getRankFromScore(score) {
+    if (score >= 200) return 1;
+    if (score >= 120) return 2;
+    if (score >= 60) return 3;
+    return 4;
+  }
+
+  function describeRank(rank) {
+    switch (rank) {
+      case 1:
+        return "All India Rank 1 (Simulated)";
+      case 2:
+        return "All India Rank 2–10 (Simulated)";
+      case 3:
+        return "All India Rank 11–50 (Simulated)";
+      default:
+        return "All India Rank 51+ (Simulated)";
+    }
+  }
+
+  // SERVER LEADERBOARD
+
+  function loadLeaderboardFromServer() {
+    const url = `${SCRIPT_URL}?action=getLeaderboard`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (!data || !data.success || !Array.isArray(data.rows)) return;
+        renderLeaderboardFromRows(data.rows);
+      })
+      .catch(err => {
+        console.error("Leaderboard load error", err);
       });
-    }
+  }
 
-    function loadLogs() {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-      } catch (e) {
-        return {};
-      }
-    }
+  function renderLeaderboardFromRows(rows) {
+    const tbody = document.getElementById("leaderboard-body");
+    tbody.innerHTML = "";
 
-    function saveLogs(logs) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    }
+    const ranked = rows.map(r => {
+      const totalHours = Number(r.totalHours || 0);
+      const daysLogged = Number(r.daysLogged || 0);
+      const topicsCount = Number(r.topicsCount || 0);
 
-    function loadMeta() {
-      try {
-        const stored = localStorage.getItem(META_KEY);
-        return stored
-          ? JSON.parse(stored)
-          : { bestStreak: 0, lastRankUpdate: null, pseudoRank: 4 };
-      } catch (e) {
-        return { bestStreak: 0, lastRankUpdate: null, pseudoRank: 4 };
-      }
-    }
+      const score = totalHours * 5 + daysLogged * 2 + topicsCount * 1;
 
-    function saveMeta(meta) {
-      localStorage.setItem(META_KEY, JSON.stringify(meta));
-    }
+      return { ...r, totalHours, daysLogged, topicsCount, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .map((r, idx) => ({ ...r, rank: idx + 1 }));
 
-    function updateCountdown() {
-      const now = new Date();
-      const diff = PRELIMS_DATE - now;
+    const currentUserId = localStorage.getItem("userId");
 
-      const container = document.getElementById("countdown");
-      if (diff <= 0) {
-        container.innerHTML =
-          '<span class="pill">Prelims 2026 in progress / completed</span>';
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-
-      container.innerHTML = `
-        <span class="pill">${days} days</span>
-        <span class="pill">${hours} hrs</span>
-        <span class="pill">${minutes} mins</span>
-      `;
-    }
-
-    function renderToday() {
-      const today = new Date();
-      const dateKey = formatDateKey(today);
-      const logs = loadLogs();
-      const log = logs[dateKey];
-
-      document.getElementById("today-date-chip").textContent =
-        "Today • " + formatDisplayDate(today);
-      document.getElementById("today-date-chip").title =
-        "Daily trackers are linked to your device date.";
-
-      document.getElementById("targets-input").value = log ? (log.targets || "") : "";
-      document.getElementById("topics-input").value = log ? (log.topics || "") : "";
-      document.getElementById("time-input").value = log ? (log.hours || "") : "";
-    }
-
-    function calculateStreaks(logs) {
-      const keys = Object.keys(logs).sort();
-      if (keys.length === 0) {
-        return { currentStreak: 0, bestStreak: 0, totalHours: 0, daysLogged: 0 };
-      }
-
-      let currentStreak = 0;
-      let bestStreak = 0;
-      let totalHours = 0;
-      let daysLogged = keys.length;
-
-      const today = new Date();
-      const todayKey = formatDateKey(today);
-      const setKeys = new Set(keys);
-
-      function hasLogFor(date) {
-        return setKeys.has(formatDateKey(date));
-      }
-
-      let cursor = new Date(todayKey + "T00:00:00");
-
-      if (!hasLogFor(cursor)) {
-        const yesterday = new Date(cursor);
-        yesterday.setDate(yesterday.getDate() - 1);
-        cursor = yesterday;
-      }
-
-      while (hasLogFor(cursor)) {
-        currentStreak += 1;
-        cursor.setDate(cursor.getDate() - 1);
-      }
-
-      let lastDate = null;
-      let run = 0;
-      keys.forEach((key) => {
-        const entry = logs[key];
-        const h = Number(entry.hours || 0);
-        if (!Number.isNaN(h)) totalHours += h;
-
-        const d = new Date(key + "T00:00:00");
-        if (!lastDate) {
-          run = 1;
-        } else {
-          const diffDays = (d - lastDate) / (1000 * 60 * 60 * 24);
-          run = diffDays === 1 ? run + 1 : 1;
-        }
-        if (run > bestStreak) bestStreak = run;
-        lastDate = d;
-      });
-
-      return { currentStreak, bestStreak, totalHours, daysLogged };
-    }
-
-    function getRankFromScore(score) {
-      if (score >= 200) return 1;
-      if (score >= 120) return 2;
-      if (score >= 60) return 3;
-      return 4;
-    }
-
-    function describeRank(rank) {
-      switch (rank) {
-        case 1:
-          return "All India Rank 1 (Simulated)";
-        case 2:
-          return "All India Rank 2–10 (Simulated)";
-        case 3:
-          return "All India Rank 11–50 (Simulated)";
-        default:
-          return "All India Rank 51+ (Simulated)";
-      }
-    }
-
-    function renderLeaderboard(stats, meta) {
-      const tbody = document.getElementById("leaderboard-body");
-      tbody.innerHTML = "";
-
-      const score = stats.totalHours * 5 + stats.daysLogged * 2;
-      const rank = getRankFromScore(score);
-      meta.pseudoRank = rank;
-      saveMeta(meta);
-
-      const userRow = {
-        rank,
-        name: "You",
-        hours: stats.totalHours.toFixed(1),
-        days: stats.daysLogged
-      };
-
+    ranked.forEach(row => {
       const tr = document.createElement("tr");
       const rankClass =
-        userRow.rank === 1 ? "rank-1" :
-        userRow.rank === 2 ? "rank-2" :
-        userRow.rank === 3 ? "rank-3" : "rank-other";
+        row.rank === 1 ? "rank-1" :
+        row.rank === 2 ? "rank-2" :
+        row.rank === 3 ? "rank-3" : "rank-other";
+
+      const nameLabel = row.userId === currentUserId ? "You" : (row.name || "Aspirant");
 
       tr.innerHTML = `
         <td>
           <span class="rank-pill ${rankClass}">
-            #${userRow.rank}
+            #${row.rank}
           </span>
         </td>
-        <td>${userRow.name}</td>
-        <td>${userRow.hours}</td>
-        <td>${userRow.days}</td>
+        <td>${nameLabel}</td>
+        <td>${row.totalHours.toFixed(1)}</td>
+        <td>${row.daysLogged}</td>
       `;
       tbody.appendChild(tr);
-
-      document.getElementById("rank-note").textContent =
-        `Your simulated UPSC-style rank is currently: ${describeRank(rank)}. ` +
-        `Keep updating today's log to improve your rank and badges.`;
-    }
-
-    function renderBadges(stats) {
-      const badgeRow = document.getElementById("badge-row");
-      badgeRow.innerHTML = "";
-
-      const score = stats.totalHours * 5 + stats.daysLogged * 2;
-      const rank = getRankFromScore(score);
-
-      if (rank === 1) {
-        badgeRow.innerHTML += `
-          <span class="badge-pill gold">
-            <span class="badge-icon">🏅</span> Gold Achiever
-          </span>
-        `;
-      } else if (rank === 2) {
-        badgeRow.innerHTML += `
-          <span class="badge-pill silver">
-            <span class="badge-icon">🥈</span> Silver Scholar
-          </span>
-        `;
-      } else if (rank === 3) {
-        badgeRow.innerHTML += `
-          <span class="badge-pill bronze">
-            <span class="badge-icon">🥉</span> Bronze Aspirant
-          </span>
-        `;
-      } else {
-        badgeRow.innerHTML += `
-          <span class="badge-pill">
-            <span class="badge-icon">📘</span> Consistent Learner
-          </span>
-        `;
-      }
-
-      if (stats.currentStreak >= 30) {
-        badgeRow.innerHTML += `
-          <span class="badge-pill">
-            <span class="badge-icon">🔥</span> 30-Day Streak
-          </span>
-        `;
-      } else if (stats.currentStreak >= 7) {
-        badgeRow.innerHTML += `
-          <span class="badge-pill">
-            <span class="badge-icon">🔥</span> 7-Day Streak
-          </span>
-        `;
-      }
-    }
-
-    function renderStats() {
-      const logs = loadLogs();
-      const meta = loadMeta();
-      const stats = calculateStreaks(logs);
-
-      document.getElementById("streak-value").textContent =
-        stats.currentStreak + " days";
-      document.getElementById("best-streak-value").textContent =
-        (meta.bestStreak || stats.bestStreak) + " days";
-      document.getElementById("total-time-value").textContent =
-        stats.totalHours.toFixed(1) + " hrs";
-
-      if (stats.bestStreak > (meta.bestStreak || 0)) {
-        meta.bestStreak = stats.bestStreak;
-        saveMeta(meta);
-        document.getElementById("best-streak-value").textContent =
-          stats.bestStreak + " days";
-      }
-
-      renderBadges(stats);
-      renderLeaderboard(stats, meta);
-      renderRankUpdate(meta);
-    }
-
-    function renderLogsList() {
-      const logs = loadLogs();
-      const list = document.getElementById("logs-list");
-      list.innerHTML = "";
-
-      const today = new Date();
-      const daysToShow = 7;
-      for (let i = 0; i < daysToShow; i++) {
-        const d = new Date();
-        d.setDate(today.getDate() - i);
-        const key = formatDateKey(d);
-        const log = logs[key];
-        if (!log) continue;
-
-        const item = document.createElement("li");
-        item.className = "target-item";
-
-        item.innerHTML = `
-          <div class="target-main">
-            <div><strong>${log.topics || "Targets logged"}</strong></div>
-            <div class="target-date">${formatDisplayDate(d)}</div>
-            <div>${(log.targets || "").slice(0, 160)}${
-              log.targets && log.targets.length > 160 ? "…" : ""
-            }</div>
-          </div>
-          <div class="target-meta">
-            <div><strong>${
-              (log.hours || 0).toFixed
-                ? log.hours.toFixed(1)
-                : Number(log.hours || 0).toFixed(1)
-            } hrs</strong></div>
-            <div>Logged</div>
-          </div>
-        `;
-        list.appendChild(item);
-      }
-
-      if (!list.children.length) {
-        const empty = document.createElement("li");
-        empty.className = "target-item";
-        empty.innerHTML =
-          '<div class="target-main"><div><strong>No logs yet.</strong></div><div class="target-date">Start with today and build your first streak.</div></div>';
-        list.appendChild(empty);
-      }
-    }
-
-    function saveTodayLog() {
-      const today = new Date();
-      const key = formatDateKey(today);
-      const logs = loadLogs();
-
-      const targets = document.getElementById("targets-input").value.trim();
-      const topics = document.getElementById("topics-input").value.trim();
-      const timeStr = document.getElementById("time-input").value.trim();
-      const hours = timeStr ? Number(timeStr) : 0;
-
-      // Ab teeno fields required
-      if (!targets || !topics || !hours) {
-        alert("Please fill all fields: targets, topics and time before saving.");
-        return;
-      }
-
-      logs[key] = {
-        targets,
-        topics,
-        hours: Number.isNaN(hours) ? 0 : hours
-      };
-      saveLogs(logs);
-
-      renderLogsList();
-      renderStats();
-      alert("Today's log saved. Streaks, rank, and badges updated.");
-    }
-
-    function clearToday() {
-      const today = new Date();
-      const key = formatDateKey(today);
-      const logs = loadLogs();
-      if (logs[key]) {
-        if (
-          confirm(
-            "This will remove today's log from this device. Are you sure?"
-          )
-        ) {
-          delete logs[key];
-          saveLogs(logs);
-          renderToday();
-          renderLogsList();
-          renderStats();
-        }
-      } else {
-        document.getElementById("targets-input").value = "";
-        document.getElementById("topics-input").value = "";
-        document.getElementById("time-input").value = "";
-      }
-    }
-
-    function renderRankUpdate(meta) {
-      const now = new Date();
-      let last = meta.lastRankUpdate ? new Date(meta.lastRankUpdate) : null;
-
-      if (!last) {
-        last = now;
-        meta.lastRankUpdate = last.toISOString();
-        saveMeta(meta);
-      }
-
-      const next = new Date(last);
-      next.setDate(next.getDate() + 2);
-
-      const diffMs = next - now;
-      const chip = document.getElementById("next-rank-update");
-      if (diffMs <= 0) {
-        meta.lastRankUpdate = now.toISOString();
-        saveMeta(meta);
-        chip.textContent = "Rank refreshed now";
-      } else {
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor(
-          (diffMs / (1000 * 60 * 60)) % 24
-        );
-        chip.textContent = `Next in ${diffDays}d ${diffHours}h`;
-      }
-    }
-
-    // 30 local quotes
-    const localQuotes = [
-      {
-        title: "LBSNAA & UPSC spirit",
-        text: "Somewhere in Mussoorie, a future officer is also reading tonight. Stay at your desk a little longer.",
-        author: "LBSNAA spirit"
-      },
-      {
-        title: "Daily discipline",
-        text: "UPSC CSE ek marathon hai, sprint nahi. Har din ki mehnat tumhe LBSNAA ke kareeb le jaati hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Dholpur House dream",
-        text: "Har roz ek honest study log, kal Dholpur House ki list me tumhara naam bana sakta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Focused hour",
-        text: "Aaj ka ek focused hour kal ki ek strong posting aur zyada zimmedari la sakta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Chair & chapter",
-        text: "Jitni der tum kursi par tikte ho, utna hi tumhara naam recommendation list ke kareeb chala jaata hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Room to LBSNAA",
-        text: "Jis kamre me tum aaj akela padh rahe ho, wahi se Mussoorie ki pahadiyon tak ka raasta nikalta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Silent effort",
-        text: "Raat ke shant kamre me ki gayi mehnat subah result list me shor machaati hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Syllabus vs spirit",
-        text: "Syllabus tumhari yaadash ka test hai, lekin UPSC safar tumhari himmat ka test hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Small pages, big posts",
-        text: "Roz ke kuch pages kal ke bade-bade files aur notes ban jaate hain jo tum officer bankar sign karoge.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Retry mindset",
-        text: "Attempt fail ho sakta hai, lekin aspirant tabhi fail hota hai jab woh phir se koshish karna chhod deta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Desk as training ground",
-        text: "Aaj ki study table kal ka field posting training ground hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Comparison trap",
-        text: "UPSC race doosron se nahi, khud ki kal wali version se hoti hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Slow days",
-        text: "Jis din pace slow ho jaaye, us din bas yahi yaad rakho – rukna mana hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Micro wins",
-        text: "Ek chapter, ek pyq, ek mock – ye chhoti jeete hi badi rank banati hain.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Dark phase",
-        text: "Sabse zyada doubt wale din hi sabse strong officer banate hain.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Revision truth",
-        text: "Thoda kam naya padho, par jo padho use baar‑baar revise karo – DAF me line wahi likhi jaati hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Noise filter",
-        text: "Log kya kahenge se zyada important hai ki tum apne notes me aaj kya likh rahe ho.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Time audit",
-        text: "Mobile ki screen time report se zyada powerful tumhara daily study log hota hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Late-night edge",
-        text: "Jab duniya reel scroll kar rahi hoti hai, tumhara ek extra hour kal ke interview panel ko impress karta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Failure as notes",
-        text: "Har failure ek rough note hai jise clean karke agla attempt topper copy ban sakta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Comfort test",
-        text: "Jo din comfortable lagta hai, us din shayad tumne apni limit push nahi ki.",
-        author: "PrepiFY"
-      },
-      {
-        title: "3-hour exam, years of prep",
-        text: "Teen ghante ki copy me likhne se pehle saalon tak apne aap ko padhna padta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Streak logic",
-        text: "Ek din ka break ek streak tod deta hai, lekin ek din ka comeback pure safar ko bachaa deta hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Library silence",
-        text: "Library ki khamoshi me likhi gayi line, kal policy document me print hoti hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Mock fear",
-        text: "Mock se darne wale mains me khud se darte hain; mock ko friend bana lo, dushman nahi.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Answer writing lens",
-        text: "Jo cheez tum explanation dekar samjha sakte ho, bas wahi cheez UPSC me marks laati hai.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Officer habits now",
-        text: "Officer ki aadatein posting ke baad nahi, preparation ke dauran banti hain.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Distraction deal",
-        text: "Har baar jab tum distraction ko reject karte ho, tum apne future cadre ko accept kar rahe hote ho.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Why you started",
-        text: "Kabhi thak jao to pages nahi, bas reason yaad karo jiske liye tumne UPSC start kiya tha.",
-        author: "PrepiFY"
-      },
-      {
-        title: "Prelims to posting",
-        text: "Ek OMR sheet se safar shuru hota hai, lekin asal mein woh har roz ke honest hours se banta hai.",
-        author: "PrepiFY"
-      }
-    ];
-
-    function getTodayKey() {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    function fetchDailyQuote() {
-      const quoteTextEl = document.getElementById("quote-text");
-      const quoteAuthorEl = document.getElementById("quote-author");
-      const quoteTitleEl = document.querySelector(".quote-title");
-
-      const todayKey = getTodayKey();
-      const storedDate = localStorage.getItem("prepify_quote_date");
-      const storedIndex = localStorage.getItem("prepify_quote_index");
-
-      let quote;
-
-      if (storedDate === todayKey && storedIndex !== null) {
-        const idx = Number(storedIndex);
-        quote = localQuotes[idx] || localQuotes[0];
-      } else {
-        const idx = Math.floor(Math.random() * localQuotes.length);
-        quote = localQuotes[idx];
-        localStorage.setItem("prepify_quote_date", todayKey);
-        localStorage.setItem("prepify_quote_index", String(idx));
-      }
-
-      if (quoteTitleEl && quote.title) {
-        quoteTitleEl.textContent = quote.title;
-      }
-      quoteTextEl.textContent = quote.text;
-      quoteAuthorEl.textContent = "– " + quote.author;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      updateCountdown();
-      setInterval(updateCountdown, 60 * 1000);
-
-      const today = new Date();
-      document.getElementById("today-date-chip").dataset.date =
-        formatDateKey(today);
-
-      renderToday();
-      renderLogsList();
-      renderStats();
-      fetchDailyQuote();
-
-      document
-        .getElementById("save-log-btn")
-        .addEventListener("click", saveTodayLog);
-      document
-        .getElementById("clear-today-btn")
-        .addEventListener("click", clearToday);
     });
-  </script>
+
+    const self = ranked.find(r => r.userId === currentUserId);
+    const rankNote = document.getElementById("rank-note");
+    if (self) {
+      rankNote.textContent =
+        `Your current simulated rank: #${self.rank} out of ${ranked.length} aspirants ` +
+        `(score from total hours, days logged and topics covered).`;
+    } else {
+      rankNote.textContent =
+        `Leaderboard uses total hours, days logged and topics covered to assign ranks.`;
+    }
+  }
+
+  // LOCAL BADGES + RANK NOTE (self-only view)
+  function renderBadges(stats) {
+    const badgeRow = document.getElementById("badge-row");
+    badgeRow.innerHTML = "";
+
+    const score = stats.totalHours * 5 + stats.daysLogged * 2;
+    const rank = getRankFromScore(score);
+
+    if (rank === 1) {
+      badgeRow.innerHTML += `
+        <span class="badge-pill gold">
+          <span class="badge-icon">🏅</span> Gold Achiever
+        </span>
+      `;
+    } else if (rank === 2) {
+      badgeRow.innerHTML += `
+        <span class="badge-pill silver">
+          <span class="badge-icon">🥈</span> Silver Scholar
+        </span>
+      `;
+    } else if (rank === 3) {
+      badgeRow.innerHTML += `
+        <span class="badge-pill bronze">
+          <span class="badge-icon">🥉</span> Bronze Aspirant
+        </span>
+      `;
+    } else {
+      badgeRow.innerHTML += `
+        <span class="badge-pill">
+          <span class="badge-icon">📘</span> Consistent Learner
+        </span>
+      `;
+    }
+
+    if (stats.currentStreak >= 30) {
+      badgeRow.innerHTML += `
+        <span class="badge-pill">
+          <span class="badge-icon">🔥</span> 30-Day Streak
+        </span>
+      `;
+    } else if (stats.currentStreak >= 7) {
+      badgeRow.innerHTML += `
+        <span class="badge-pill">
+          <span class="badge-icon">🔥</span> 7-Day Streak
+        </span>
+      `;
+    }
+  }
+
+  function renderStats() {
+    const logs = loadLogs();
+    const meta = loadMeta();
+    const stats = calculateStreaks(logs);
+
+    document.getElementById("streak-value").textContent =
+      stats.currentStreak + " days";
+    document.getElementById("best-streak-value").textContent =
+      (meta.bestStreak || stats.bestStreak) + " days";
+    document.getElementById("total-time-value").textContent =
+      stats.totalHours.toFixed(1) + " hrs";
+
+    if (stats.bestStreak > (meta.bestStreak || 0)) {
+      meta.bestStreak = stats.bestStreak;
+      saveMeta(meta);
+      document.getElementById("best-streak-value").textContent =
+        stats.bestStreak + " days";
+    }
+
+    renderBadges(stats);
+    renderRankUpdate(meta);
+  }
+
+  function renderLogsList() {
+    const logs = loadLogs();
+    const list = document.getElementById("logs-list");
+    list.innerHTML = "";
+
+    const today = new Date();
+    const daysToShow = 7;
+    for (let i = 0; i < daysToShow; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const key = formatDateKey(d);
+      const log = logs[key];
+      if (!log) continue;
+
+      const item = document.createElement("li");
+      item.className = "target-item";
+
+      item.innerHTML = `
+        <div class="target-main">
+          <div><strong>${log.topics || "Targets logged"}</strong></div>
+          <div class="target-date">${formatDisplayDate(d)}</div>
+          <div>${(log.targets || "").slice(0, 160)}${
+            log.targets && log.targets.length > 160 ? "…" : ""
+          }</div>
+        </div>
+        <div class="target-meta">
+          <div><strong>${
+            (log.hours || 0).toFixed
+              ? log.hours.toFixed(1)
+              : Number(log.hours || 0).toFixed(1)
+          } hrs</strong></div>
+          <div>Logged</div>
+        </div>
+      `;
+      list.appendChild(item);
+    }
+
+    if (!list.children.length) {
+      const empty = document.createElement("li");
+      empty.className = "target-item";
+      empty.innerHTML =
+        '<div class="target-main"><div><strong>No logs yet.</strong></div><div class="target-date">Start with today and build your first streak.</div></div>';
+      list.appendChild(empty);
+    }
+  }
+
+  function saveTodayLog() {
+    const today = new Date();
+    const key = formatDateKey(today);
+    const logs = loadLogs();
+
+    const targets = document.getElementById("targets-input").value.trim();
+    const topics = document.getElementById("topics-input").value.trim();
+    const timeStr = document.getElementById("time-input").value.trim();
+    const hours = timeStr ? Number(timeStr) : 0;
+
+    if (!targets || !topics || !hours) {
+      alert("Please fill all fields: targets, topics and time before saving.");
+      return;
+    }
+
+    const topicsCountToday = topics
+      ? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
+      : 0;
+
+    logs[key] = {
+      targets,
+      topics,
+      hours: Number.isNaN(hours) ? 0 : hours,
+      topicsCount: topicsCountToday
+    };
+    saveLogs(logs);
+
+    renderLogsList();
+    renderStats();
+
+    const userId = localStorage.getItem("userId") || "GUEST";
+    const name = localStorage.getItem("name") || "Aspirant";
+
+    const url = `${SCRIPT_URL}?action=updateLeaderboard` +
+      `&userId=${encodeURIComponent(userId)}` +
+      `&name=${encodeURIComponent(name)}` +
+      `&hoursToday=${encodeURIComponent(hours)}` +
+      `&topicsToday=${encodeURIComponent(topicsCountToday)}` +
+      `&hasLogToday=1`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(() => {
+        loadLeaderboardFromServer();
+        alert("Today's log saved. Streaks, rank, badges and leaderboard updated.");
+      })
+      .catch(() => {
+        alert("Today's log saved locally. Leaderboard sync failed, please try again later.");
+      });
+  }
+
+  function clearToday() {
+    const today = new Date();
+    const key = formatDateKey(today);
+    const logs = loadLogs();
+    if (logs[key]) {
+      if (
+        confirm(
+          "This will remove today's log from this device. Are you sure?"
+        )
+      ) {
+        delete logs[key];
+        saveLogs(logs);
+        renderToday();
+        renderLogsList();
+        renderStats();
+      }
+    } else {
+      document.getElementById("targets-input").value = "";
+      document.getElementById("topics-input").value = "";
+      document.getElementById("time-input").value = "";
+    }
+  }
+
+  function renderRankUpdate(meta) {
+    const now = new Date();
+    let last = meta.lastRankUpdate ? new Date(meta.lastRankUpdate) : null;
+
+    if (!last) {
+      last = now;
+      meta.lastRankUpdate = last.toISOString();
+      saveMeta(meta);
+    }
+
+    const next = new Date(last);
+    next.setDate(next.getDate() + 2);
+
+    const diffMs = next - now;
+    const chip = document.getElementById("next-rank-update");
+    if (diffMs <= 0) {
+      meta.lastRankUpdate = now.toISOString();
+      saveMeta(meta);
+      chip.textContent = "Rank refreshed now";
+    } else {
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor(
+        (diffMs / (1000 * 60 * 60)) % 24
+      );
+      chip.textContent = `Next in ${diffDays}d ${diffHours}h`;
+    }
+  }
+
+  // Quotes
+
+  const localQuotes = [
+    { title: "LBSNAA & UPSC spirit", text: "Somewhere in Mussoorie, a future officer is also reading tonight. Stay at your desk a little longer.", author: "LBSNAA spirit" },
+    { title: "Daily discipline", text: "UPSC CSE ek marathon hai, sprint nahi. Har din ki mehnat tumhe LBSNAA ke kareeb le jaati hai.", author: "PrepiFY" },
+    { title: "Dholpur House dream", text: "Har roz ek honest study log, kal Dholpur House ki list me tumhara naam bana sakta hai.", author: "PrepiFY" },
+    { title: "Focused hour", text: "Aaj ka ek focused hour kal ki ek strong posting aur zyada zimmedari la sakta hai.", author: "PrepiFY" },
+    { title: "Chair & chapter", text: "Jitni der tum kursi par tikte ho, utna hi tumhara naam recommendation list ke kareeb chala jaata hai.", author: "PrepiFY" },
+    { title: "Room to LBSNAA", text: "Jis kamre me tum aaj akela padh rahe ho, wahi se Mussoorie ki pahadiyon tak ka raasta nikalta hai.", author: "PrepiFY" },
+    { title: "Silent effort", text: "Raat ke shant kamre me ki gayi mehnat subah result list me shor machaati hai.", author: "PrepiFY" },
+    { title: "Syllabus vs spirit", text: "Syllabus tumhari yaadash ka test hai, lekin UPSC safar tumhari himmat ka test hai.", author: "PrepiFY" },
+    { title: "Small pages, big posts", text: "Roz ke kuch pages kal ke bade-bade files aur notes ban jaate hain jo tum officer bankar sign karoge.", author: "PrepiFY" },
+    { title: "Retry mindset", text: "Attempt fail ho sakta hai, lekin aspirant tabhi fail hota hai jab woh phir se koshish karna chhod deta hai.", author: "PrepiFY" },
+    { title: "Desk as training ground", text: "Aaj ki study table kal ka field posting training ground hai.", author: "PrepiFY" },
+    { title: "Comparison trap", text: "UPSC race doosron se nahi, khud ki kal wali version se hoti hai.", author: "PrepiFY" },
+    { title: "Slow days", text: "Jis din pace slow ho jaaye, us din bas yahi yaad rakho – rukna mana hai.", author: "PrepiFY" },
+    { title: "Micro wins", text: "Ek chapter, ek pyq, ek mock – ye chhoti jeete hi badi rank banati hain.", author: "PrepiFY" },
+    { title: "Dark phase", text: "Sabse zyada doubt wale din hi sabse strong officer banate hain.", author: "PrepiFY" },
+    { title: "Revision truth", text: "Thoda kam naya padho, par jo padho use baar‑baar revise karo – DAF me line wahi likhi jaati hai.", author: "PrepiFY" },
+    { title: "Noise filter", text: "Log kya kahenge se zyada important hai ki tum apne notes me aaj kya likh rahe ho.", author: "PrepiFY" },
+    { title: "Time audit", text: "Mobile ki screen time report se zyada powerful tumhara daily study log hota hai.", author: "PrepiFY" },
+    { title: "Late-night edge", text: "Jab duniya reel scroll kar rahi hoti hai, tumhara ek extra hour kal ke interview panel ko impress karta hai.", author: "PrepiFY" },
+    { title: "Failure as notes", text: "Har failure ek rough note hai jise clean karke agla attempt topper copy ban sakta hai.", author: "PrepiFY" },
+    { title: "Comfort test", text: "Jo din comfortable lagta hai, us din shayad tumne apni limit push nahi ki.", author: "PrepiFY" },
+    { title: "3-hour exam, years of prep", text: "Teen ghante ki copy me likhne se pehle saalon tak apne aap ko padhna padta hai.", author: "PrepiFY" },
+    { title: "Streak logic", text: "Ek din ka break ek streak tod deta hai, lekin ek din ka comeback pure safar ko bachaa deta hai.", author: "PrepiFY" },
+    { title: "Library silence", text: "Library ki khamoshi me likhi gayi line, kal policy document me print hoti hai.", author: "PrepiFY" },
+    { title: "Mock fear", text: "Mock se darne wale mains me khud se darte hain; mock ko friend bana lo, dushman nahi.", author: "PrepiFY" },
+    { title: "Answer writing lens", text: "Jo cheez tum explanation dekar samjha sakte ho, bas wahi cheez UPSC me marks laati hai.", author: "PrepiFY" },
+    { title: "Officer habits now", text: "Officer ki aadatein posting ke baad nahi, preparation ke dauran banti hain.", author: "PrepiFY" },
+    { title: "Distraction deal", text: "Har baar jab tum distraction ko reject karte ho, tum apne future cadre ko accept kar rahe hote ho.", author: "PrepiFY" },
+    { title: "Why you started", text: "Kabhi thak jao to pages nahi, bas reason yaad karo jiske liye tumne UPSC start kiya tha.", author: "PrepiFY" },
+    { title: "Prelims to posting", text: "Ek OMR sheet se safar shuru hota hai, lekin asal mein woh har roz ke honest hours se banta hai.", author: "PrepiFY" }
+  ];
+
+  function getTodayKey() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function fetchDailyQuote() {
+    const quoteTextEl = document.getElementById("quote-text");
+    const quoteAuthorEl = document.getElementById("quote-author");
+    const quoteTitleEl = document.querySelector(".quote-title");
+
+    const todayKey = getTodayKey();
+    const storedDate = localStorage.getItem("prepify_quote_date");
+    const storedIndex = localStorage.getItem("prepify_quote_index");
+
+    let quote;
+
+    if (storedDate === todayKey && storedIndex !== null) {
+      const idx = Number(storedIndex);
+      quote = localQuotes[idx] || localQuotes[0];
+    } else {
+      const idx = Math.floor(Math.random() * localQuotes.length);
+      quote = localQuotes[idx];
+      localStorage.setItem("prepify_quote_date", todayKey);
+      localStorage.setItem("prepify_quote_index", String(idx));
+    }
+
+    if (quoteTitleEl && quote.title) {
+      quoteTitleEl.textContent = quote.title;
+    }
+    quoteTextEl.textContent = quote.text;
+    quoteAuthorEl.textContent = "– " + quote.author;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    updateCountdown();
+    setInterval(updateCountdown, 60 * 1000);
+
+    const today = new Date();
+    document.getElementById("today-date-chip").dataset.date =
+      formatDateKey(today);
+
+    renderToday();
+    renderLogsList();
+    renderStats();
+    fetchDailyQuote();
+
+    loadLeaderboardFromServer(); // server se leaderboard
+
+    document
+      .getElementById("save-log-btn")
+      .addEventListener("click", saveTodayLog);
+    document
+      .getElementById("clear-today-btn")
+      .addEventListener("click", clearToday);
+  });
+</script>
+
 </body>
 </html>
