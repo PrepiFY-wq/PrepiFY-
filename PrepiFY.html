@@ -1094,34 +1094,199 @@
       }
     }
 
-    async function fetchDailyQuote() {
-      const quoteTextEl = document.getElementById("quote-text");
-      const quoteAuthorEl = document.getElementById("quote-author");
+   const localQuotes = [ /* 30 quotes ka array yahan */ ];
 
-      try {
-        const res = await fetch("https://zenquotes.io/api/today");
-        if (!res.ok) throw new Error("Failed");
-        const data = await res.json();
-        const q = data[0];
-        let text = q.q || "";
-        const author = q.a || "Unknown";
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-        const hint =
-          "Remember: every page you read today is a step closer to LBSNAA.";
-        if (text.length > 120) {
-          text = text.slice(0, 120) + "… " + hint;
-        } else {
-          text = text + " " + hint;
-        }
+// PrepiFY daily UPSC quotes (30)
+const localQuotes = [
+  {
+    title: "LBSNAA & UPSC spirit",
+    text: "Somewhere in Mussoorie, a future officer is also reading tonight. Stay at your desk a little longer.",
+    author: "LBSNAA spirit"
+  },
+  {
+    title: "Daily discipline",
+    text: "UPSC CSE ek marathon hai, sprint nahi. Har din ki mehnat tumhe LBSNAA ke kareeb le jaati hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Dholpur House dream",
+    text: "Har roz ek honest study log, kal Dholpur House ki list me tumhara naam bana sakta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Focused hour",
+    text: "Aaj ka ek focused hour kal ki ek strong posting aur zyada zimmedari la sakta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Chair & chapter",
+    text: "Jitni der tum kursi par tikte ho, utna hi tumhara naam recommendation list ke kareeb chala jaata hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Room to LBSNAA",
+    text: "Jis kamre me tum aaj akela padh rahe ho, wahi se Mussoorie ki pahadiyon tak ka raasta nikalta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Silent effort",
+    text: "Raat ke shant kamre me ki gayi mehnat subah result list me shor machaati hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Syllabus vs spirit",
+    text: "Syllabus tumhari yaadash ka test hai, lekin UPSC safar tumhari himmat ka test hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Small pages, big posts",
+    text: "Roz ke kuch pages kal ke bade-bade files aur notes ban jaate hain jo tum officer bankar sign karoge.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Retry mindset",
+    text: "Attempt fail ho sakta hai, lekin aspirant tabhi fail hota hai jab woh phir se koshish karna chhod deta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Desk as training ground",
+    text: "Aaj ki study table kal ka field posting training ground hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Comparison trap",
+    text: "UPSC race doosron se nahi, khud ki kal wali version se hoti hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Slow days",
+    text: "Jis din pace slow ho jaaye, us din bas yahi yaad rakho – rukna mana hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Micro wins",
+    text: "Ek chapter, ek pyq, ek mock – ye chhoti jeete hi badi rank banati hain.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Dark phase",
+    text: "Sabse zyada doubt wale din hi sabse strong officer banate hain.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Revision truth",
+    text: "Thoda kam naya padho, par jo padho use baar‑baar revise karo – DAF me line wahi likhi jaati hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Noise filter",
+    text: "Log kya kahenge se zyada important hai ki tum apne notes me aaj kya likh rahe ho.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Time audit",
+    text: "Mobile ki screen time report se zyada powerful tumhara daily study log hota hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Late-night edge",
+    text: "Jab duniya reel scroll kar rahi hoti hai, tumhara ek extra hour kal ke interview panel ko impress karta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Failure as notes",
+    text: "Har failure ek rough note hai jise clean karke agla attempt topper copy ban sakta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Comfort test",
+    text: "Jo din comfortable lagta hai, us din shayad tumne apni limit push nahi ki.",
+    author: "PrepiFY"
+  },
+  {
+    title: "3-hour exam, years of prep",
+    text: "Teen ghante ki copy me likhne se pehle saalon tak apne aap ko padhna padta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Streak logic",
+    text: "Ek din ka break ek streak tod deta hai, lekin ek din ka comeback pure safar ko bachaa deta hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Library silence",
+    text: "Library ki khamoshi me likhi gayi line, kal policy document me print hoti hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Mock fear",
+    text: "Mock se darne wale mains me khud se darte hain; mock ko friend bana lo, dushman nahi.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Answer writing lens",
+    text: "Jo cheez tum explanation dekar samjha sakte ho, bas wahi cheez UPSC me marks laati hai.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Officer habits now",
+    text: "Officer ki aadatein posting ke baad nahi, preparation ke dauran banti hain.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Distraction deal",
+    text: "Har baar jab tum distraction ko reject karte ho, tum apne future cadre ko accept kar rahe hote ho.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Why you started",
+    text: "Kabhi thak jao to pages nahi, bas reason yaad karo jiske liye tumne UPSC start kiya tha.",
+    author: "PrepiFY"
+  },
+  {
+    title: "Prelims to posting",
+    text: "Ek OMR sheet se safar shuru hota hai, lekin asal mein woh har roz ke honest hours se banta hai.",
+    author: "PrepiFY"
+  }
+];
 
-        quoteTextEl.textContent = text;
-        quoteAuthorEl.textContent = "– " + author;
-      } catch (e) {
-        quoteTextEl.textContent =
-          "Somewhere in Mussoorie, a future officer is also reading tonight. Stay at your desk a little longer.";
-        quoteAuthorEl.textContent = "– LBSNAA spirit";
-      }
-    }
+// Date helper
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Daily quote (1 per day, no CORS)
+function fetchDailyQuote() {
+  const quoteTextEl = document.getElementById("quote-text");
+  const quoteAuthorEl = document.getElementById("quote-author");
+  const quoteTitleEl = document.querySelector(".quote-title");
+
+  const todayKey = getTodayKey();
+  const storedDate = localStorage.getItem("prepify_quote_date");
+  const storedIndex = localStorage.getItem("prepify_quote_index");
+
+  let quote;
+
+  if (storedDate === todayKey && storedIndex !== null) {
+    const idx = Number(storedIndex);
+    quote = localQuotes[idx] || localQuotes[0];
+  } else {
+    const idx = Math.floor(Math.random() * localQuotes.length);
+    quote = localQuotes[idx];
+    localStorage.setItem("prepify_quote_date", todayKey);
+    localStorage.setItem("prepify_quote_index", String(idx));
+  }
+
+  if (quoteTitleEl && quote.title) {
+    quoteTitleEl.textContent = quote.title;
+  }
+  quoteTextEl.textContent = quote.text;
+  quoteAuthorEl.textContent = "– " + quote.author;
+}
 
     document.addEventListener("DOMContentLoaded", () => {
       updateCountdown();
