@@ -26,12 +26,8 @@
       font-size: 20px;
       font-weight: 700;
     }
-    .brand {
-      color: #bfdbfe;
-    }
-    .brand span {
-      color: #f97316;
-    }
+    .brand { color: #bfdbfe; }
+    .brand span { color: #f97316; }
     main {
       flex: 1;
       display: grid;
@@ -40,9 +36,7 @@
       padding: 20px;
     }
     @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-      }
+      main { grid-template-columns: 1fr; }
     }
     .card {
       background: #020617;
@@ -79,9 +73,7 @@
       font-size: 12px;
       color: #9ca3af;
     }
-    tbody tr:hover {
-      background: rgba(15,23,42,0.7);
-    }
+    tbody tr:hover { background: rgba(15,23,42,0.7); }
     .tag {
       display: inline-block;
       padding: 2px 8px;
@@ -116,11 +108,7 @@
       color: #e5e7eb;
       border: 1px solid #1f2937;
     }
-    button.small {
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-    }
+    button.small { padding: 4px 8px; border-radius: 999px; font-size: 11px; }
     button:hover {
       transform: translateY(-1px);
       box-shadow: 0 8px 16px rgba(0,0,0,0.4);
@@ -132,7 +120,7 @@
       transform: none;
     }
     .table-container {
-      max-height: 420px;
+      max-height: 260px;
       overflow: auto;
     }
     .detail-grid {
@@ -179,9 +167,7 @@
       margin-bottom: 4px;
       display: block;
     }
-    .section {
-      margin-bottom: 12px;
-    }
+    .section { margin-bottom: 12px; }
     .status-bar {
       font-size: 12px;
       color: #9ca3af;
@@ -199,7 +185,7 @@
   </header>
 
   <main>
-    <!-- LEFT: Candidate list + registration -->
+    <!-- LEFT: Candidate list + leaderboard -->
     <section class="card">
       <h2>Candidates & Registrations</h2>
       <div class="status-bar" id="listStatus">Loading candidates...</div>
@@ -216,9 +202,29 @@
             </tr>
           </thead>
           <tbody id="candidateTableBody">
-            <!-- Filled by JS -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Leaderboard section -->
+      <div class="section" style="margin-top:16px;">
+        <h2 style="margin-bottom:8px;">UPSC_Tracker Leaderboard</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Study hrs</th>
+                <th>Days</th>
+                <th>Topics</th>
+                <th>Streak</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -245,6 +251,17 @@
             <div><span>Verified:</span> <span id="detailVerified"></span></div>
             <div><span>User ID:</span> <span id="detailUserId"></span></div>
           </div>
+
+          <!-- Streak restore controls -->
+          <div class="section" id="streakControl" style="margin-top:10px; display:none;">
+            <label class="field-label">Restore / Set streak for this candidate</label>
+            <div style="display:flex; gap:8px; margin-bottom:6px;">
+              <input type="number" id="restoreCurrentStreak" placeholder="Current streak (days)" min="0" style="max-width:120px;">
+              <input type="number" id="restoreBestStreak" placeholder="Best streak (optional)" min="0" style="max-width:140px;">
+            </div>
+            <button class="primary small" type="button" onclick="restoreStreak()">Restore streak</button>
+            <div class="status-bar" id="streakStatus"></div>
+          </div>
         </div>
       </div>
 
@@ -253,7 +270,6 @@
         <label class="field-label" for="noticeTarget">Send Notice To</label>
         <select id="noticeTarget">
           <option value="all">All Students</option>
-          <!-- JS se specific candidates ke liye options add honge -->
         </select>
       </div>
 
@@ -272,15 +288,11 @@
   </main>
 
   <script>
-    // Yahan apna Apps Script Web App URL daalo:
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec';
 
-    let candidates = [];  // Sheet se aane wala data
+    let candidates = [];
     let selectedIndex = null;
-
-    // TODO: BACKEND mein getStudents action banana hoga.
-    // Abhi ke liye structure ready hai:
-    // doGet ?action=getStudents => JSON array of rows.
+    let leaderboardRows = [];
 
     async function loadCandidates() {
       const status = document.getElementById('listStatus');
@@ -307,7 +319,6 @@
         tbody.innerHTML = '';
 
         const noticeTarget = document.getElementById('noticeTarget');
-        // Reset target dropdown (keep "All" at top)
         noticeTarget.innerHTML = '<option value="all">All Students</option>';
 
         candidates.forEach((c, idx) => {
@@ -351,7 +362,6 @@
 
           tbody.appendChild(tr);
 
-          // Notice target dropdown mein add karo
           if (c.Email) {
             const opt = document.createElement('option');
             opt.value = c.Email;
@@ -362,6 +372,53 @@
       } catch (err) {
         console.error(err);
         status.textContent = 'Error loading candidates.';
+      }
+    }
+
+    async function loadLeaderboard() {
+      const tbody = document.getElementById('leaderboardBody');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="6">Loading leaderboard...</td></tr>';
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=getLeaderboard`);
+        const data = await res.json();
+        if (!data.success || !Array.isArray(data.rows)) {
+          tbody.innerHTML = '<tr><td colspan="6">No leaderboard data.</td></tr>';
+          return;
+        }
+
+        leaderboardRows = data.rows.slice();
+
+        const ranked = leaderboardRows
+          .map(r => {
+            const totalHours = Number(r.totalHours || 0);
+            const daysLogged = Number(r.daysLogged || 0);
+            const topicsCount = Number(r.topicsCount || 0);
+            const score = totalHours * 5 + daysLogged * 2 + topicsCount * 1;
+            return { ...r, totalHours, daysLogged, topicsCount, score };
+          })
+          .sort((a, b) => b.score - a.score)
+          .map((r, idx) => ({ ...r, rank: idx + 1 }));
+
+        tbody.innerHTML = '';
+
+        ranked.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.rank}</td>
+            <td>${row.name || ''}</td>
+            <td>${row.totalHours.toFixed(1)}</td>
+            <td>${row.daysLogged}</td>
+            <td>${row.topicsCount}</td>
+            <td>${row.currentStreak || 0} / ${row.bestStreak || 0}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="6">Error loading leaderboard.</td></tr>';
       }
     }
 
@@ -382,9 +439,52 @@
       document.getElementById('detailVerified').textContent = c.Verified || 'NO';
       document.getElementById('detailUserId').textContent = c['User ID'] || '';
 
-      // Abhi rank & streak sheet me nahi hain, isliye placeholder
-      document.getElementById('rankPill').textContent = 'Rank: N/A';
-      document.getElementById('streakPill').textContent = 'Streak: N/A';
+      const rankPill = document.getElementById('rankPill');
+      const streakPill = document.getElementById('streakPill');
+      const streakControl = document.getElementById('streakControl');
+      const streakStatus = document.getElementById('streakStatus');
+
+      streakStatus.textContent = '';
+      streakControl.style.display = 'none';
+
+      const userId = c['User ID'] || c['Contact Number'] || c.Contact || '';
+      if (!userId) {
+        rankPill.textContent = 'Rank: N/A';
+        streakPill.textContent = 'Streak: N/A';
+        return;
+      }
+
+      const lbRow = leaderboardRows.find(r => r.userId == userId);
+      if (!lbRow) {
+        rankPill.textContent = 'Rank: Not in leaderboard';
+        streakPill.textContent = 'Streak: 0 / 0';
+        return;
+      }
+
+      const ranked = leaderboardRows
+        .map(r => {
+          const totalHours = Number(r.totalHours || 0);
+          const daysLogged = Number(r.daysLogged || 0);
+          const topicsCount = Number(r.topicsCount || 0);
+          const score = totalHours * 5 + daysLogged * 2 + topicsCount * 1;
+          return { ...r, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .map((r, idx) => ({ ...r, rank: idx + 1 }));
+
+      const self = ranked.find(r => r.userId == userId);
+
+      rankPill.textContent = self
+        ? `Rank: #${self.rank} (score ${self.score})`
+        : 'Rank: N/A';
+
+      streakPill.textContent =
+        `Streak: ${lbRow.currentStreak || 0} days, Best: ${lbRow.bestStreak || 0}`;
+
+      streakControl.style.display = 'block';
+      streakControl.dataset.userId = userId;
+      document.getElementById('restoreCurrentStreak').value = lbRow.currentStreak || 0;
+      document.getElementById('restoreBestStreak').value = lbRow.bestStreak || 0;
     }
 
     async function verifyCandidate(index, buttonEl) {
@@ -406,7 +506,8 @@
 
         if (data.success) {
           alert('Verification successful. Credentials mail sent.');
-          await loadCandidates(); // list refresh
+          await loadCandidates();
+          await loadLeaderboard();
           if (selectedIndex === index) {
             showDetails(index);
           }
@@ -440,7 +541,6 @@
       status.textContent = 'Sending notice...';
 
       try {
-        // BACKEND: sendNotice action banana hoga
         const url = `${SCRIPT_URL}?action=sendNotice` +
           `&target=${encodeURIComponent(target)}` +
           `&message=${encodeURIComponent(message)}`;
@@ -460,8 +560,49 @@
       }
     }
 
-    // Page load
-    document.addEventListener('DOMContentLoaded', loadCandidates);
+    async function restoreStreak() {
+      const streakControl = document.getElementById('streakControl');
+      const userId = streakControl.dataset.userId;
+      const currentStreak = Number(document.getElementById('restoreCurrentStreak').value || 0);
+      const bestStreakVal = document.getElementById('restoreBestStreak').value;
+      const bestStreak = bestStreakVal === '' ? null : Number(bestStreakVal);
+      const status = document.getElementById('streakStatus');
+
+      if (!userId) {
+        status.textContent = 'User ID missing for this candidate.';
+        return;
+      }
+
+      status.textContent = 'Updating streak...';
+
+      try {
+        let url = `${SCRIPT_URL}?action=setUserStreak` +
+          `&userId=${encodeURIComponent(userId)}` +
+          `&currentStreak=${encodeURIComponent(currentStreak)}`;
+        if (bestStreak !== null && !Number.isNaN(bestStreak)) {
+          url += `&bestStreak=${encodeURIComponent(bestStreak)}`;
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          status.textContent = 'Streak updated successfully.';
+          await loadLeaderboard();
+          if (selectedIndex !== null) showDetails(selectedIndex);
+        } else {
+          status.textContent = 'Error: ' + (data.message || 'Failed to update streak.');
+        }
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Error while updating streak.';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCandidates();
+      loadLeaderboard();
+    });
   </script>
 </body>
 </html>
