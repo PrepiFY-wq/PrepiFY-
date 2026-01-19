@@ -1022,12 +1022,10 @@
       const timeStr = document.getElementById("time-input").value.trim();
       const hours = timeStr ? Number(timeStr) : 0;
 
-      if (!targets && !topics && !hours) {
-        alert(
-          "Please fill at least one field (targets, topics, or time) before saving."
-        );
-        return;
-      }
+   if (!targets || !topics || !hours) {
+  alert("Please fill all fields: targets, topics and time before saving.");
+  return;
+}
 
       logs[key] = {
         targets,
