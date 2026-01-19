@@ -575,17 +575,18 @@
       fetch(url)
         .then(r => r.json())
         .then(data => {
-          if (data.success) {
-            const user = data.user;
-            localStorage.setItem('userId', user.userId);
-            localStorage.setItem('name', user.name);
-            localStorage.setItem('exam', user.preparingFor || '');
-            showMessage('Login successful! Redirecting...', 'success');
+        if (data.success) {
+  const user = data.user;
+  localStorage.setItem('userId', user.userId);
+  localStorage.setItem('name', user.name);
+  localStorage.setItem('exam', user.preparingFor || '');
+  showMessage('Login successful! Redirecting...', 'success');
 
-            setTimeout(() => {
-              window.location.href = 'upsc-dashboard.html';
-            }, 1500);
-          } else {
+  setTimeout(() => {
+    window.location.href = 'PrepiFY.html';   // yahan naya dashboard file name
+  }, 1500);
+}
+        else {
             showMessage(data.message || 'Invalid credentials.', 'error');
           }
         })
