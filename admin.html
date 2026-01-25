@@ -174,6 +174,42 @@
       margin-top: 8px;
       min-height: 16px;
     }
+
+    /* पथ प्रदर्शक admin section styling */
+    .path-admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .path-admin-title {
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #f97316, #ec4899);
+      -webkit-background-clip: text;
+      color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .path-admin-title-icon {
+      font-size: 18px;
+    }
+    .path-admin-subtitle {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+    .path-inline-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .path-inline-row .field-wrapper {
+      flex: 1;
+      min-width: 140px;
+    }
   </style>
 </head>
 <body>
@@ -228,7 +264,7 @@
       </div>
     </section>
 
-    <!-- RIGHT: Details + Notice -->
+    <!-- RIGHT: Details + Notice + Path Pradarshak -->
     <section class="card">
       <h2>Candidate Details & Notice</h2>
 
@@ -275,7 +311,7 @@
 
       <div class="section">
         <label class="field-label" for="noticeMessage">Notice Message</label>
-        <textarea id="noticeMessage" rows="4" placeholder="Type important announcement or guidance..."></textarea>
+        <textarea id="noticeMessage" rows="3" placeholder="Type important announcement or guidance..."></textarea>
       </div>
 
       <div class="section" style="display:flex; gap:8px; justify-content:flex-end;">
@@ -284,6 +320,51 @@
       </div>
 
       <div class="status-bar" id="noticeStatus"></div>
+
+      <!-- पथ प्रदर्शक – Admin Control -->
+      <div class="section" style="margin-top:18px; border-top:1px solid #1f2937; padding-top:12px;">
+        <div class="path-admin-header">
+          <div>
+            <div class="path-admin-title">
+              <span class="path-admin-title-icon">🛣️</span>
+              <span>पथ प्रदर्शक – Admin Control</span>
+            </div>
+            <div class="path-admin-subtitle">
+              Daily life based UPSC motivation story yahan se publish karein – student side par latest story top me, purani stories archive me dikhengi.
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="path-inline-row">
+            <div class="field-wrapper">
+              <label class="field-label" for="pathTitle">Story Title</label>
+              <input id="pathTitle" type="text" placeholder="e.g. Subah ka ek ghanta jo sab badal gaya">
+            </div>
+            <div class="field-wrapper">
+              <label class="field-label" for="pathDate">Story Date</label>
+              <input id="pathDate" type="date">
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <label class="field-label" for="pathTagline">Tagline (optional)</label>
+          <input id="pathTagline" type="text" placeholder="e.g. Admin ki real life se ek chhota scene">
+        </div>
+
+        <div class="section">
+          <label class="field-label" for="pathBody">Story Body</label>
+          <textarea id="pathBody" rows="5" placeholder="Admin ki UPSC wali daily life se inspired detailed kahani yahan likho..."></textarea>
+        </div>
+
+        <div class="section" style="display:flex; gap:8px; justify-content:flex-end;">
+          <button class="secondary small" type="button" onclick="resetDemoStory()">Reset to Demo Story</button>
+          <button class="primary small" type="button" onclick="publishPathStory()">Publish Path Pradarshak</button>
+        </div>
+
+        <div class="status-bar" id="pathStatus"></div>
+      </div>
     </section>
   </main>
 
@@ -599,9 +680,83 @@
       }
     }
 
+    // पथ प्रदर्शक – admin submit handlers
+
+    function resetDemoStory() {
+      const status = document.getElementById('pathStatus');
+      status.textContent = 'Resetting to demo story...';
+
+      // Apps Script me ek naya action handle karna hoga: resetPathDemo
+      fetch(`${SCRIPT_URL}?action=resetPathDemo`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            status.textContent = 'Demo story reset ho gayi. Students side par default kahani dikhegi.';
+          } else {
+            status.textContent = 'Error: ' + (data.message || 'Demo reset failed.');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          status.textContent = 'Error while resetting demo story.';
+        });
+    }
+
+    async function publishPathStory() {
+      const title = document.getElementById('pathTitle').value.trim();
+      const date = document.getElementById('pathDate').value;
+      const tagLine = document.getElementById('pathTagline').value.trim();
+      const body = document.getElementById('pathBody').value.trim();
+      const status = document.getElementById('pathStatus');
+
+      if (!title || !body) {
+        status.textContent = 'Title aur body dono required hain.';
+        return;
+      }
+
+      status.textContent = 'Publishing story to Path Pradarshak...';
+
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'updatePathStory');
+        params.append('title', title);
+        params.append('body', body);
+        if (date) params.append('date', date);
+        if (tagLine) params.append('tagLine', tagLine);
+
+        const url = `${SCRIPT_URL}?${params.toString()}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          status.textContent = 'Story publish ho gayi. Student side par latest kahani top par dikh rahi hogi.';
+          // optional: fields clear
+          // document.getElementById('pathTitle').value = '';
+          // document.getElementById('pathBody').value = '';
+          // document.getElementById('pathTagline').value = '';
+          // document.getElementById('pathDate').value = '';
+        } else {
+          status.textContent = 'Error: ' + (data.message || 'Failed to publish story.');
+        }
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Error while publishing story.';
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       loadCandidates();
       loadLeaderboard();
+
+      // Default pathDate ko aaj ki date set karna
+      const pathDateInput = document.getElementById('pathDate');
+      if (pathDateInput) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        pathDateInput.value = `${yyyy}-${mm}-${dd}`;
+      }
     });
   </script>
 </body>
