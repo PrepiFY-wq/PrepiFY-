@@ -513,6 +513,157 @@
       color: var(--text-muted);
       margin-top: 4px;
     }
+
+    /* पथ प्रदर्शक section */
+
+    .path-pradarshak {
+      margin-top: 24px;
+    }
+
+    .path-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .path-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #f97316, #ec4899);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .path-title-icon {
+      font-size: 20px;
+    }
+
+    .path-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .story-main-card {
+      background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+      border-radius: 16px;
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(79, 70, 229, 0.25);
+      box-shadow: 0 10px 24px rgba(79, 70, 229, 0.16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .story-main-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.16), transparent 55%);
+      pointer-events: none;
+    }
+
+    .story-label-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #e5e7eb;
+      margin-bottom: 8px;
+    }
+
+    .story-label-pill span {
+      font-size: 13px;
+    }
+
+    .story-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #111827;
+    }
+
+    .story-meta {
+      font-size: 11px;
+      color: #4b5563;
+      margin-bottom: 8px;
+    }
+
+    .story-body {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #111827;
+      white-space: pre-line;
+    }
+
+    .story-divider-title {
+      margin-top: 16px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+    }
+
+    .stories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .story-card {
+      position: relative;
+      border-radius: 14px;
+      padding: 10px 11px;
+      background: linear-gradient(135deg, #fef9c3, #ffedd5);
+      border: 1px solid rgba(234, 179, 8, 0.6);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+
+    .story-card:nth-child(3n+2) {
+      background: linear-gradient(135deg, #e0f2fe, #f5f3ff);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .story-card:nth-child(3n+3) {
+      background: linear-gradient(135deg, #fee2e2, #fffbeb);
+      border-color: rgba(248, 113, 113, 0.55);
+    }
+
+    .story-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .story-card-body {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #111827;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-line;
+    }
+
+    .story-card-meta {
+      font-size: 11px;
+      color: #4b5563;
+      margin-top: 4px;
+    }
+
+    .story-empty {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
   </style>
 </head>
 <body>
@@ -611,6 +762,44 @@
             <!-- Badges will be injected here -->
           </div>
         </div>
+
+        <!-- पथ प्रदर्शक सेक्शन START -->
+        <div class="section path-pradarshak">
+          <div class="path-header">
+            <div>
+              <div class="path-title">
+                <span class="path-title-icon">🛣️</span>
+                <span>पथ प्रदर्शक</span>
+              </div>
+              <p class="path-subtitle">
+                Admin ke daily life based UPSC motivation stories – har din ek nayi kahani, jo tumhe track par rakhe.
+              </p>
+            </div>
+          </div>
+
+          <!-- Latest / Main Story -->
+          <div id="path-main-story" class="story-main-card" style="display:none;">
+            <div class="story-label-pill">
+              <span>✨</span>
+              <span>Aaj ki Path Pradarshak Kahani</span>
+            </div>
+            <div class="story-title" id="path-main-title"></div>
+            <div class="story-meta" id="path-main-meta"></div>
+            <div class="story-body" id="path-main-body"></div>
+          </div>
+
+          <!-- Previous Stories -->
+          <div id="path-previous-wrapper" style="margin-top: 6px; display:none;">
+            <div class="story-divider-title">Pichhli kahaniyan (archive)</div>
+            <div id="path-previous-stories" class="stories-grid"></div>
+          </div>
+
+          <p id="path-empty" class="story-empty" style="display:none;">
+            Abhi tak koi kahani add nahi hui hai. Jald hi admin yahan se tumhari tayari ka raasta aur clear karega.
+          </p>
+        </div>
+        <!-- पथ प्रदर्शक सेक्शन END -->
+
       </section>
 
       <!-- Right: Leaderboard & Rank -->
@@ -679,6 +868,9 @@
   const PRELIMS_DATE = new Date("2026-05-24T00:00:00+05:30");
   const STORAGE_KEY = "prepify_logs_v1";
   const META_KEY = "prepify_meta_v1";
+
+  /* पथ प्रदर्शक stories ke liye keys */
+  const PATH_STORAGE_KEY = "prepify_path_pradarshak_stories_v1";
 
   function formatDateKey(date) {
     return date.toISOString().slice(0, 10);
@@ -1186,6 +1378,117 @@
     quoteAuthorEl.textContent = "– " + quote.author;
   }
 
+  /* पथ प्रदर्शक – stories logic */
+
+  /**
+   * Story structure:
+   * {
+   *   id: string,
+   *   title: string,
+   *   body: string,
+   *   date: string (YYYY-MM-DD),
+   *   tagLine?: string
+   * }
+   */
+
+  function loadPathPradarshakStories() {
+    try {
+      const raw = localStorage.getItem(PATH_STORAGE_KEY);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch (e) {}
+
+    // default ek demo story seed karne ke liye
+    const seed = [
+      {
+        id: "seed-" + Date.now(),
+        title: "Subah ka ek ghanta jo poore din ko change kar gaya",
+        body: "Kal raat admin ne bhi socha ki aaj thoda late uthte hain. Lekin alarm bajte hi ek cheez yaad aayi –\n\n\"Jis din tum jaldi uthkar padhte ho, us din duniya tumse ek step peeche reh jaati hai.\"\n\nUsne phone door rakha, bas ek cup chai banayi aur pehle 60 minutes sirf Polity ke notes revise kiye. Baaki din chahe jitna messy ho gaya ho, lekin us ek ghante ne guilt ko door rakha.\n\nTum bhi aaj bas itna socho – kya main ek honest subah ka ghanta UPSC ko de sakta hoon?",
+        date: formatDateKey(new Date()),
+        tagLine: "Admin ki real life se ek chhota sa scene"
+      }
+    ];
+
+    localStorage.setItem(PATH_STORAGE_KEY, JSON.stringify(seed));
+    return seed;
+  }
+
+  function savePathPradarshakStories(stories) {
+    localStorage.setItem(PATH_STORAGE_KEY, JSON.stringify(stories));
+  }
+
+  // Ye function admin ke panel se call ho sakta hai (naya story push)
+  // Example use:
+  // addNewPathStory({ title: "...", body: "...", date: "2026-01-25", tagLine: "..." })
+  function addNewPathStory(story) {
+    const stories = loadPathPradarshakStories();
+    const newStory = {
+      id: story.id || ("story-" + Date.now()),
+      title: story.title || "Untitled Story",
+      body: story.body || "",
+      date: story.date || formatDateKey(new Date()),
+      tagLine: story.tagLine || ""
+    };
+    // latest story ko top par rakhne ke liye unshift
+    stories.unshift(newStory);
+    savePathPradarshakStories(stories);
+    renderPathPradarshak();
+  }
+
+  function renderPathPradarshak() {
+    const stories = loadPathPradarshakStories();
+
+    const mainCard = document.getElementById("path-main-story");
+    const mainTitle = document.getElementById("path-main-title");
+    const mainMeta = document.getElementById("path-main-meta");
+    const mainBody = document.getElementById("path-main-body");
+
+    const prevWrapper = document.getElementById("path-previous-wrapper");
+    const prevContainer = document.getElementById("path-previous-stories");
+    const emptyEl = document.getElementById("path-empty");
+
+    if (!stories || stories.length === 0) {
+      mainCard.style.display = "none";
+      prevWrapper.style.display = "none";
+      emptyEl.style.display = "block";
+      return;
+    }
+
+    emptyEl.style.display = "none";
+
+    const [latest, ...rest] = stories;
+
+    // Main story
+    mainCard.style.display = "block";
+    mainTitle.textContent = latest.title;
+    const d = new Date(latest.date + "T00:00:00");
+    mainMeta.textContent =
+      (latest.tagLine ? latest.tagLine + " • " : "") +
+      formatDisplayDate(d);
+    mainBody.textContent = latest.body;
+
+    // Previous stories
+    prevContainer.innerHTML = "";
+    if (rest.length > 0) {
+      prevWrapper.style.display = "block";
+      rest.forEach(st => {
+        const card = document.createElement("div");
+        card.className = "story-card";
+
+        const dt = new Date(st.date + "T00:00:00");
+        card.innerHTML = `
+          <div class="story-card-title">${st.title}</div>
+          <div class="story-card-body">${st.body}</div>
+          <div class="story-card-meta">${st.tagLine ? st.tagLine + " • " : ""}${formatDisplayDate(dt)}</div>
+        `;
+        prevContainer.appendChild(card);
+      });
+    } else {
+      prevWrapper.style.display = "none";
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     updateCountdown();
     setInterval(updateCountdown, 60 * 1000);
@@ -1200,6 +1503,9 @@
     fetchDailyQuote();
 
     loadLeaderboardFromServer(); // server se leaderboard
+
+    // पथ प्रदर्शक render
+    renderPathPradarshak();
 
     document
       .getElementById("save-log-btn")
