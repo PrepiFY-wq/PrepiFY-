@@ -864,13 +864,24 @@
 
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec";
-
   const PRELIMS_DATE = new Date("2026-05-24T00:00:00+05:30");
   const STORAGE_KEY = "prepify_logs_v1";
   const META_KEY = "prepify_meta_v1";
 
   /* पथ प्रदर्शक stories ke liye keys */
   const PATH_STORAGE_KEY = "prepify_path_pradarshak_stories_v1";
+
+  async function fetchPathStoriesFromServer() {
+    try {
+      const res = await fetch(`${SCRIPT_URL}?action=getPathStories`);
+      const data = await res.json();
+      if (!data.success || !Array.isArray(data.stories)) return null;
+      return data.stories;
+    } catch (e) {
+      console.error("Path stories fetch error", e);
+      return null;
+    }
+  }
 
   function formatDateKey(date) {
     return date.toISOString().slice(0, 10);
@@ -1391,7 +1402,7 @@
    * }
    */
 
-  function loadPathPradarshakStories() {
+ function loadPathPradarshakStories() {
   // 1. Pehle localStorage check
   try {
     const raw = localStorage.getItem(PATH_STORAGE_KEY);
@@ -1416,80 +1427,103 @@
   return demoSeed;
 }
 
-  function savePathPradarshakStories(stories) {
-    localStorage.setItem(PATH_STORAGE_KEY, JSON.stringify(stories));
+function savePathPradarshakStories(stories) {
+  localStorage.setItem(PATH_STORAGE_KEY, JSON.stringify(stories));
+}
+
+// Ye function admin ke panel se call ho sakta hai (naya story push)
+function addNewPathStory(story) {
+  const stories = loadPathPradarshakStories();
+  const newStory = {
+    id: story.id || ("story-" + Date.now()),
+    title: story.title || "Untitled Story",
+    body: story.body || "",
+    date: story.date || formatDateKey(new Date()),
+    tagLine: story.tagLine || ""
+  };
+  stories.unshift(newStory);
+  savePathPradarshakStories(stories);
+  renderPathPradarshak();
+}
+
+ async function renderPathPradarshak() {
+  // 1. Pehle server se stories lane ki koshish
+  let stories = await fetchPathStoriesFromServer();
+
+  // 2. Agar server se kuch nahi mila, to localStorage fallback
+  if (!stories || !stories.length) {
+    stories = loadPathPradarshakStories();
   }
 
-  // Ye function admin ke panel se call ho sakta hai (naya story push)
-  // Example use:
-  // addNewPathStory({ title: "...", body: "...", date: "2026-01-25", tagLine: "..." })
-  function addNewPathStory(story) {
-    const stories = loadPathPradarshakStories();
-    const newStory = {
-      id: story.id || ("story-" + Date.now()),
-      title: story.title || "Untitled Story",
-      body: story.body || "",
-      date: story.date || formatDateKey(new Date()),
-      tagLine: story.tagLine || ""
-    };
-    // latest story ko top par rakhne ke liye unshift
-    stories.unshift(newStory);
-    savePathPradarshakStories(stories);
-    renderPathPradarshak();
+  const mainCard = document.getElementById("path-main-story");
+  const mainTitle = document.getElementById("path-main-title");
+  const mainMeta = document.getElementById("path-main-meta");
+  const mainBody = document.getElementById("path-main-body");
+
+  const prevWrapper = document.getElementById("path-previous-wrapper");
+  const prevContainer = document.getElementById("path-previous-stories");
+  const emptyEl = document.getElementById("path-empty");
+
+  if (!stories || stories.length === 0) {
+    mainCard.style.display = "none";
+    prevWrapper.style.display = "none";
+    emptyEl.style.display = "block";
+    return;
   }
 
-  function renderPathPradarshak() {
-    const stories = loadPathPradarshakStories();
+  emptyEl.style.display = "none";
 
-    const mainCard = document.getElementById("path-main-story");
-    const mainTitle = document.getElementById("path-main-title");
-    const mainMeta = document.getElementById("path-main-meta");
-    const mainBody = document.getElementById("path-main-body");
+  const [latest, ...rest] = stories;
 
-    const prevWrapper = document.getElementById("path-previous-wrapper");
-    const prevContainer = document.getElementById("path-previous-stories");
-    const emptyEl = document.getElementById("path-empty");
+  // Main story
+  mainCard.style.display = "block";
+  mainTitle.textContent = latest.title;
 
-    if (!stories || stories.length === 0) {
-      mainCard.style.display = "none";
-      prevWrapper.style.display = "none";
-      emptyEl.style.display = "block";
-      return;
-    }
+  const rawDate = latest.date || latest.createdAt || "";
+  const d = rawDate ? new Date(rawDate.toString()) : null;
+  const dateLabel =
+    d && !isNaN(d.getTime())
+      ? d.toLocaleDateString("en-IN", {
+          weekday: "short",
+          day: "2-digit",
+          month: "short"
+        })
+      : "";
 
-    emptyEl.style.display = "none";
+  mainMeta.textContent =
+    (latest.tagLine ? latest.tagLine + " • " : "") + dateLabel;
+  mainBody.textContent = latest.body;
 
-    const [latest, ...rest] = stories;
+  // Previous stories
+  prevContainer.innerHTML = "";
+  if (rest.length > 0) {
+    prevWrapper.style.display = "block";
+    rest.forEach(st => {
+      const card = document.createElement("div");
+      card.className = "story-card";
 
-    // Main story
-    mainCard.style.display = "block";
-    mainTitle.textContent = latest.title;
-    const d = new Date(latest.date + "T00:00:00");
-    mainMeta.textContent =
-      (latest.tagLine ? latest.tagLine + " • " : "") +
-      formatDisplayDate(d);
-    mainBody.textContent = latest.body;
+      const raw = st.date || st.createdAt || "";
+      const dt = raw ? new Date(raw.toString()) : null;
+      const dtLabel =
+        dt && !isNaN(dt.getTime())
+          ? dt.toLocaleDateString("en-IN", {
+              weekday: "short",
+              day: "2-digit",
+              month: "short"
+            })
+          : "";
 
-    // Previous stories
-    prevContainer.innerHTML = "";
-    if (rest.length > 0) {
-      prevWrapper.style.display = "block";
-      rest.forEach(st => {
-        const card = document.createElement("div");
-        card.className = "story-card";
-
-        const dt = new Date(st.date + "T00:00:00");
-        card.innerHTML = `
-          <div class="story-card-title">${st.title}</div>
-          <div class="story-card-body">${st.body}</div>
-          <div class="story-card-meta">${st.tagLine ? st.tagLine + " • " : ""}${formatDisplayDate(dt)}</div>
-        `;
-        prevContainer.appendChild(card);
-      });
-    } else {
-      prevWrapper.style.display = "none";
-    }
+      card.innerHTML = `
+        <div class="story-card-title">${st.title}</div>
+        <div class="story-card-body">${st.body}</div>
+        <div class="story-card-meta">${st.tagLine ? st.tagLine + " • " : ""}${dtLabel}</div>
+      `;
+      prevContainer.appendChild(card);
+    });
+  } else {
+    prevWrapper.style.display = "none";
   }
+}
 
   document.addEventListener("DOMContentLoaded", () => {
     updateCountdown();
