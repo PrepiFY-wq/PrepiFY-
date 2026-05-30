@@ -1098,55 +1098,53 @@
 }
 
   // LOCAL BADGES + RANK NOTE (self-only view)
-  function renderBadges(stats) {
-    const badgeRow = document.getElementById("badge-row");
-    badgeRow.innerHTML = "";
+ function renderBadges(stats) {
+  const badgeRow = document.getElementById("badge-row");
+  badgeRow.innerHTML = "";
 
-      const totalPoints = Number(r.totalPoints || 0);
-     return { ...r, totalHours, daysLogged, topicsCount, totalPoints, score: totalPoints };
-    const rank = getRankFromScore(score);
+  const score = stats.totalHours * 5 + stats.daysLogged * 2;
+  const rank = getRankFromScore(score);
 
-    if (rank === 1) {
-      badgeRow.innerHTML += `
-        <span class="badge-pill gold">
-          <span class="badge-icon">🏅</span> Gold Achiever
-        </span>
-      `;
-    } else if (rank === 2) {
-      badgeRow.innerHTML += `
-        <span class="badge-pill silver">
-          <span class="badge-icon">🥈</span> Silver Scholar
-        </span>
-      `;
-    } else if (rank === 3) {
-      badgeRow.innerHTML += `
-        <span class="badge-pill bronze">
-          <span class="badge-icon">🥉</span> Bronze Aspirant
-        </span>
-      `;
-    } else {
-      badgeRow.innerHTML += `
-        <span class="badge-pill">
-          <span class="badge-icon">📘</span> Consistent Learner
-        </span>
-      `;
-    }
-
-    if (stats.currentStreak >= 30) {
-      badgeRow.innerHTML += `
-        <span class="badge-pill">
-          <span class="badge-icon">🔥</span> 30-Day Streak
-        </span>
-      `;
-    } else if (stats.currentStreak >= 7) {
-      badgeRow.innerHTML += `
-        <span class="badge-pill">
-          <span class="badge-icon">🔥</span> 7-Day Streak
-        </span>
-      `;
-    }
+  if (rank === 1) {
+    badgeRow.innerHTML += `
+      <span class="badge-pill gold">
+        <span class="badge-icon">🏅</span> Gold Achiever
+      </span>
+    `;
+  } else if (rank === 2) {
+    badgeRow.innerHTML += `
+      <span class="badge-pill silver">
+        <span class="badge-icon">🥈</span> Silver Scholar
+      </span>
+    `;
+  } else if (rank === 3) {
+    badgeRow.innerHTML += `
+      <span class="badge-pill bronze">
+        <span class="badge-icon">🥉</span> Bronze Aspirant
+      </span>
+    `;
+  } else {
+    badgeRow.innerHTML += `
+      <span class="badge-pill">
+        <span class="badge-icon">📘</span> Consistent Learner
+      </span>
+    `;
   }
 
+  if (stats.currentStreak >= 30) {
+    badgeRow.innerHTML += `
+      <span class="badge-pill">
+        <span class="badge-icon">🔥</span> 30-Day Streak
+      </span>
+    `;
+  } else if (stats.currentStreak >= 7) {
+    badgeRow.innerHTML += `
+      <span class="badge-pill">
+        <span class="badge-icon">🔥</span> 7-Day Streak
+      </span>
+    `;
+  }
+}
   function renderStats() {
     const logs = loadLogs();
     const meta = loadMeta();
