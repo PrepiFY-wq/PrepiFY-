@@ -716,25 +716,31 @@
               <textarea id="targets-input" placeholder="E.g. Polity – Fundamental Rights, Laxmikanth Ch. 6; Economy – Inflation basics"></textarea>
             </div>
           </div>
-          <div class="form-row">
-            <div class="input-inline">
-              <label for="topics-input">Topics covered (short)</label>
-              <input id="topics-input" type="text" placeholder="E.g. FRs, DPSP, Inflation, WPI, CPI" />
-            </div>
-            <div class="input-inline">
-              <label for="time-input">Total study time (hours)</label>
-              <input id="time-input" type="number" min="0" step="0.25" placeholder="E.g. 6.5" />
-            </div>
-          </div>
-          <div class="form-row" style="justify-content: flex-end;">
-            <button class="btn-secondary" id="clear-today-btn">
-              <span class="btn-icon">↺</span> Clear today
-            </button>
-            <button class="btn-primary" id="save-log-btn">
-              <span class="btn-icon">✔</span> Save today & update streak
-            </button>
-          </div>
-        </div>
+      <div class="form-row">
+  <div class="input-inline">
+    <label for="topics-input">Topics covered (short)</label>
+    <input id="topics-input" type="text" placeholder="E.g. FRs, DPSP, Inflation, WPI, CPI" />
+  </div>
+
+  <div class="input-inline">
+    <label for="time-input">Total study time (hours)</label>
+    <input id="time-input" type="number" min="0" step="0.25" placeholder="E.g. 6.5" />
+  </div>
+
+  <div class="input-inline">
+    <label for="answers-input">Answers written</label>
+    <input id="answers-input" type="number" min="0" step="1" placeholder="E.g. 3" />
+  </div>
+</div>
+
+<div class="form-row" style="justify-content: flex-end;">
+  <button class="btn-secondary" id="clear-today-btn">
+    <span class="btn-icon">↺</span> Clear today
+  </button>
+  <button class="btn-primary" id="save-log-btn">
+    <span class="btn-icon">✔</span> Save today & update streak
+  </button>
+</div>
 
         <div class="section">
           <div class="section-title">Last 7 days logs</div>
@@ -959,6 +965,7 @@
     document.getElementById("targets-input").value = log ? (log.targets || "") : "";
     document.getElementById("topics-input").value = log ? (log.topics || "") : "";
     document.getElementById("time-input").value = log ? (log.hours || "") : "";
+    document.getElementById("answers-input").value = log ? (log.answersToday || "") : "";
   }
 
   function calculateStreaks(logs) {
@@ -1223,6 +1230,7 @@
   const topics = document.getElementById("topics-input").value.trim();
   const timeStr = document.getElementById("time-input").value.trim();
   const hours = timeStr ? Number(timeStr) : 0;
+   const answersToday = Number(document.getElementById("answers-input").value || 0);
 
   if (!targets || !topics || !hours) {
     alert("Please fill all fields: targets, topics and time before saving.");
