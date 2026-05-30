@@ -678,7 +678,7 @@
       </div>
 
       <div class="countdown-box">
-        <div class="countdown-label">UPSC CSE Prelims 2026</div>
+        <div class="countdown-label">UPSC CSE Prelims 2027</div>
         <div class="countdown-time" id="countdown">
           <span class="pill">Loading…</span>
         </div>
@@ -864,7 +864,7 @@
 
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec";
-  const PRELIMS_DATE = new Date("2026-05-24T00:00:00+05:30");
+  const PRELIMS_DATE = new Date("2027-05-23T00:00:00+05:30");
   const STORAGE_KEY = "prepify_logs_v1";
   const META_KEY = "prepify_meta_v1";
 
@@ -930,7 +930,7 @@
     const container = document.getElementById("countdown");
     if (diff <= 0) {
       container.innerHTML =
-        '<span class="pill">Prelims 2026 in progress / completed</span>';
+        '<span class="pill">Prelims 2027 in progress / completed</span>';
       return;
     }
 
@@ -1050,64 +1050,60 @@
       });
   }
 
-  function renderLeaderboardFromRows(rows) {
-    const tbody = document.getElementById("leaderboard-body");
-    tbody.innerHTML = "";
+ function renderLeaderboardFromRows(rows) {
+  const tbody = document.getElementById("leaderboard-body");
+  tbody.innerHTML = "";
 
-    const ranked = rows.map(r => {
-      const totalHours = Number(r.totalHours || 0);
-      const daysLogged = Number(r.daysLogged || 0);
-      const topicsCount = Number(r.topicsCount || 0);
+  const ranked = rows
+    .map(r => ({
+      ...r,
+      totalHours: Number(r.totalHours || 0),
+      daysLogged: Number(r.daysLogged || 0),
+      totalPoints: Number(r.totalPoints || 0),
+      answerCount: Number(r.answerCount || 0),
+      rank: Number(r.rank || 999)
+    }))
+    .sort((a, b) => a.rank - b.rank);
 
-      const score = totalHours * 5 + daysLogged * 2 + topicsCount * 1;
+  const currentUserId = localStorage.getItem("userId");
 
-      return { ...r, totalHours, daysLogged, topicsCount, score };
-    })
-    .sort((a, b) => b.score - a.score)
-    .map((r, idx) => ({ ...r, rank: idx + 1 }));
+  ranked.forEach(row => {
+    const tr = document.createElement("tr");
+    const rankClass =
+      row.rank === 1 ? "rank-1" :
+      row.rank === 2 ? "rank-2" :
+      row.rank === 3 ? "rank-3" : "rank-other";
 
-    const currentUserId = localStorage.getItem("userId");
+    const nameLabel = row.userId === currentUserId ? "You" : (row.name || "Aspirant");
 
-    ranked.forEach(row => {
-      const tr = document.createElement("tr");
-      const rankClass =
-        row.rank === 1 ? "rank-1" :
-        row.rank === 2 ? "rank-2" :
-        row.rank === 3 ? "rank-3" : "rank-other";
+    tr.innerHTML = `
+      <td><span class="rank-pill ${rankClass}">#${row.rank}</span></td>
+      <td>${nameLabel}</td>
+      <td>${row.totalPoints}</td>
+      <td>${row.levelName || "प्रारम्भिक साधक"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-      const nameLabel = row.userId === currentUserId ? "You" : (row.name || "Aspirant");
+  const self = ranked.find(r => r.userId === currentUserId);
+  const rankNote = document.getElementById("rank-note");
 
-      tr.innerHTML = `
-        <td>
-          <span class="rank-pill ${rankClass}">
-            #${row.rank}
-          </span>
-        </td>
-        <td>${nameLabel}</td>
-        <td>${row.totalHours.toFixed(1)}</td>
-        <td>${row.daysLogged}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    const self = ranked.find(r => r.userId === currentUserId);
-    const rankNote = document.getElementById("rank-note");
-    if (self) {
-      rankNote.textContent =
-        `Your current simulated rank: #${self.rank} out of ${ranked.length} aspirants ` +
-        `(score from total hours, days logged and topics covered).`;
-    } else {
-      rankNote.textContent =
-        `Leaderboard uses total hours, days logged and topics covered to assign ranks.`;
-    }
+  if (self) {
+    rankNote.textContent =
+      `Your current rank: #${self.rank} out of ${ranked.length} aspirants • ${self.totalPoints} pts • Level: ${self.levelName || "प्रारम्भिक साधक"}`;
+  } else {
+    rankNote.textContent =
+      "Leaderboard uses total points and current levels from the server.";
   }
+}
 
   // LOCAL BADGES + RANK NOTE (self-only view)
   function renderBadges(stats) {
     const badgeRow = document.getElementById("badge-row");
     badgeRow.innerHTML = "";
 
-    const score = stats.totalHours * 5 + stats.daysLogged * 2;
+      const totalPoints = Number(r.totalPoints || 0);
+     return { ...r, totalHours, daysLogged, topicsCount, totalPoints, score: totalPoints };
     const rank = getRankFromScore(score);
 
     if (rank === 1) {
@@ -1220,57 +1216,64 @@
     }
   }
 
-  function saveTodayLog() {
-    const today = new Date();
-    const key = formatDateKey(today);
-    const logs = loadLogs();
+ function saveTodayLog() {
+  const today = new Date();
+  const key = formatDateKey(today);
+  const logs = loadLogs();
 
-    const targets = document.getElementById("targets-input").value.trim();
-    const topics = document.getElementById("topics-input").value.trim();
-    const timeStr = document.getElementById("time-input").value.trim();
-    const hours = timeStr ? Number(timeStr) : 0;
+  const targets = document.getElementById("targets-input").value.trim();
+  const topics = document.getElementById("topics-input").value.trim();
+  const timeStr = document.getElementById("time-input").value.trim();
+  const hours = timeStr ? Number(timeStr) : 0;
 
-    if (!targets || !topics || !hours) {
-      alert("Please fill all fields: targets, topics and time before saving.");
-      return;
-    }
-
-    const topicsCountToday = topics
-      ? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
-      : 0;
-
-    logs[key] = {
-      targets,
-      topics,
-      hours: Number.isNaN(hours) ? 0 : hours,
-      topicsCount: topicsCountToday
-    };
-    saveLogs(logs);
-
-    renderLogsList();
-    renderStats();
-
-    const userId = localStorage.getItem("userId") || "GUEST";
-    const name = localStorage.getItem("name") || "Aspirant";
-
-    const url = `${SCRIPT_URL}?action=updateLeaderboard` +
-      `&userId=${encodeURIComponent(userId)}` +
-      `&name=${encodeURIComponent(name)}` +
-      `&hoursToday=${encodeURIComponent(hours)}` +
-      `&topicsToday=${encodeURIComponent(topicsCountToday)}` +
-      `&hasLogToday=1`;
-
-    fetch(url)
-      .then(r => r.json())
-      .then(() => {
-        loadLeaderboardFromServer();
-        alert("Today's log saved. Streaks, rank, badges and leaderboard updated.");
-      })
-      .catch(() => {
-        alert("Today's log saved locally. Leaderboard sync failed, please try again later.");
-      });
+  if (!targets || !topics || !hours) {
+    alert("Please fill all fields: targets, topics and time before saving.");
+    return;
   }
 
+  const topicsCountToday = topics
+    ? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
+    : 0;
+
+  const alreadyLoggedToday = !!logs[key];
+  const hasLogToday = alreadyLoggedToday ? 0 : 1;
+
+  logs[key] = {
+    targets,
+    topics,
+    hours: Number.isNaN(hours) ? 0 : hours,
+    topicsCount: topicsCountToday
+  };
+  saveLogs(logs);
+
+  renderLogsList();
+  renderStats();
+
+  const userId = localStorage.getItem("userId") || "GUEST";
+  const name = localStorage.getItem("name") || "Aspirant";
+
+  const answersToday = 0;
+  const pointsToday = topicsCountToday + hours + (answersToday * 2);
+
+  const url = `${SCRIPT_URL}?action=updateLeaderboard` +
+    `&userId=${encodeURIComponent(userId)}` +
+    `&name=${encodeURIComponent(name)}` +
+    `&hoursToday=${encodeURIComponent(hours)}` +
+    `&topicsToday=${encodeURIComponent(topicsCountToday)}` +
+    `&answersToday=${encodeURIComponent(answersToday)}` +
+    `&pointsToday=${encodeURIComponent(pointsToday)}` +
+    `&hasLogToday=${encodeURIComponent(hasLogToday)}`;
+
+  fetch(url)
+    .then(r => r.json())
+    .then(() => {
+      loadLeaderboardFromServer();
+      alert("Today's log saved. Streaks, rank, badges and leaderboard updated.");
+    })
+    .catch(() => {
+      alert("Today's log saved locally. Leaderboard sync failed, please try again later.");
+    });
+}
   function clearToday() {
     const today = new Date();
     const key = formatDateKey(today);
