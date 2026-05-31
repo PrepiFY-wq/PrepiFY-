@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <title>PrepiFY – UPSC Daily Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
   <style>
     :root {
       --primary: #1f5f8b;
@@ -33,6 +35,17 @@
       min-height: 100vh;
     }
 
+    @keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
     header {
       background: linear-gradient(135deg, #0f172a, #1f5f8b);
       color: #fff;
@@ -813,7 +826,7 @@
         <div class="card-header">
           <div class="card-title">
             <h2>Your Rank & Badges</h2>
-            <span>Updated every 2 days based on time + targets</span>
+            <span>Live daily ranking based on points, consistency & level</span>
           </div>
           <span class="chip" id="next-rank-update">Rank refresh: calculating…</span>
         </div>
@@ -1304,34 +1317,22 @@ renderStats();
     }
   }
 
-  function renderRankUpdate(meta) {
-    const now = new Date();
-    let last = meta.lastRankUpdate ? new Date(meta.lastRankUpdate) : null;
+function renderRankUpdate(meta) {
+  const chip = document.getElementById("next-rank-update");
 
-    if (!last) {
-      last = now;
-      meta.lastRankUpdate = last.toISOString();
-      saveMeta(meta);
-    }
-
-    const next = new Date(last);
-    next.setDate(next.getDate() + 2);
-
-    const diffMs = next - now;
-    const chip = document.getElementById("next-rank-update");
-    if (diffMs <= 0) {
-      meta.lastRankUpdate = now.toISOString();
-      saveMeta(meta);
-      chip.textContent = "Rank refreshed now";
-    } else {
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const diffHours = Math.floor(
-        (diffMs / (1000 * 60 * 60)) % 24
-      );
-      chip.textContent = `Next in ${diffDays}d ${diffHours}h`;
-    }
-  }
-
+  chip.innerHTML = `
+    <span style="
+      color:#16a34a;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    ">
+      <span style="animation:pulse 1.5s infinite;">🟢</span>
+      LIVE DAILY RANKING
+    </span>
+  `;
+}
   // Quotes
 
   const localQuotes = [
