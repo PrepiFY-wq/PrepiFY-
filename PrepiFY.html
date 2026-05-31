@@ -846,50 +846,63 @@ background:linear-gradient(135deg,#dc2626,#ef4444);
           </p>
         </div>
         <!-- पथ प्रदर्शक सेक्शन END -->
+</section>
 
-      </section>
-      <div id="top-three-podium"></div>
-      <!-- Right: Leaderboard & Rank -->
-      <aside class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <h2>Your Rank & Badges</h2>
-            <span>Live daily ranking based on points, consistency & level</span>
-          </div>
-          <span class="chip" id="next-rank-update">Rank refresh: calculating…</span>
-        </div>
+<!-- Right: Leaderboard & Rank -->
+<aside class="card">
 
-        <p class="tagline">
-          PrepiFY simulates a simple leaderboard based on your own discipline –
-          perfect for solo preparation and accountability.
-        </p>
+  <div id="top-three-podium"></div>
 
-        <div class="section">
-          <div class="section-title">Leaderboard snapshot</div>
-          <table class="leaderboard-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Candidate</th>
-                <th>Points</th>
-                <th>Days logged</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-            </tbody>
-          </table>
-          <p class="rank-update-info" id="rank-note">
-            Ranks are recalculated from your own total study hours and days logged.
-          </p>
-        </div>
-
-        <p class="footer-note">
-          Tip: Fill this log honestly every night, just like your future LBSNAA
-          discipline.
-        </p>
-      </aside>
+  <div class="card-header">
+    <div class="card-title">
+      <h2>Your Rank & Badges</h2>
+      <span>Live daily ranking based on points, consistency & level</span>
     </div>
-  </main>
+
+    <span class="chip" id="next-rank-update">
+      Rank refresh: calculating…
+    </span>
+  </div>
+
+  <p class="tagline">
+    PrepiFY simulates a simple leaderboard based on your own discipline –
+    perfect for solo preparation and accountability.
+  </p>
+
+  <div class="section">
+
+    <div class="section-title">
+      Leaderboard Snapshot
+    </div>
+
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Candidate</th>
+          <th>Points</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+
+      <tbody id="leaderboard-body">
+      </tbody>
+    </table>
+
+    <p class="rank-update-info" id="rank-note">
+      Live daily ranking based on study consistency, answers written and total points.
+    </p>
+
+  </div>
+
+  <p class="footer-note">
+    Tip: Fill this log honestly every night, just like your future LBSNAA discipline.
+  </p>
+
+</aside>
+
+</div>
+</main>
 
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzE4hzUuVYxCCvPkCmlZSADihaJgQwb7u0w_aBvC6WP5f8GUC7WNfOIBTbBAClXfL0CgA/exec";
@@ -1096,6 +1109,33 @@ function renderLeaderboardFromRows(rows) {
     }))
     .sort((a, b) => a.rank - b.rank);
 
+  // TOP 3 PODIUM
+  const podium = document.getElementById("top-three-podium");
+
+  if (podium && ranked.length >= 3) {
+    podium.innerHTML = `
+      <div style="
+        display:flex;
+        gap:10px;
+        margin-bottom:15px;
+        justify-content:center;
+        flex-wrap:wrap;
+      ">
+        <div class="level-badge level-down">
+          🥈 ${ranked[1].name}
+        </div>
+
+        <div class="level-badge level-up">
+          👑 ${ranked[0].name}
+        </div>
+
+        <div class="level-badge">
+          🥉 ${ranked[2].name}
+        </div>
+      </div>
+    `;
+  }
+
   const currentUserId = localStorage.getItem("userId");
 
   ranked.forEach(row => {
@@ -1131,40 +1171,70 @@ function renderLeaderboardFromRows(rows) {
           ${nameLabel}
         </div>
 
-        <div class="level-badge">
-          ${row.levelName || "Seeker of Start"}
-        </div>
+       <div class="level-badge">
+  L${row.levelNumber || 1} • ${row.levelName || "🌱 First Step Aspirant"}
+</div>
       </td>
 
       <td>${row.totalPoints}</td>
-
       <td>${row.daysLogged}</td>
     `;
 
     tbody.appendChild(tr);
-
   });
 
-  const self =
-    ranked.find(r => r.userId === currentUserId);
-
-  const rankNote =
-    document.getElementById("rank-note");
+  const self = ranked.find(r => r.userId === currentUserId);
+  const rankNote = document.getElementById("rank-note");
 
   if (self) {
-
     rankNote.textContent =
-      `Your Rank #${self.rank} • ${self.totalPoints} Points • ${self.levelName || "Seeker of Start"}`;
-
+      `Your Rank #${self.rank} • ${self.totalPoints} Points • L${self.levelNumber || 1} • ${self.levelName || "🌱 First Step Aspirant"}`;
   } else {
-
     rankNote.textContent =
       "Live daily ranking based on points and consistency.";
-
   }
-
 }
 
+function renderLogsList() {
+  const logs = loadLogs();
+  const list = document.getElementById("logs-list");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  const entries = Object.entries(logs)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 7);
+
+  if (entries.length === 0) {
+    list.innerHTML =
+      `<li class="target-item">
+        <div class="target-main">
+          <strong>No logs yet</strong>
+        </div>
+      </li>`;
+    return;
+  }
+
+  entries.forEach(([date, log]) => {
+    const item = document.createElement("li");
+    item.className = "target-item";
+
+    item.innerHTML = `
+      <div class="target-main">
+        <strong>${log.topics || "-"}</strong>
+        <div class="target-date">${date}</div>
+      </div>
+      <div class="target-meta">
+        ${Number(log.hours || 0).toFixed(1)} hrs
+      </div>
+    `;
+
+    list.appendChild(item);
+  });
+}
+  
   function renderStats() {
     const logs = loadLogs();
     const meta = loadMeta();
@@ -1191,7 +1261,6 @@ function saveTodayLog() {
 const today = new Date();
 const key = formatDateKey(today);
 const logs = loadLogs();
-
 const targets = document.getElementById("targets-input").value.trim();
 const topics = document.getElementById("topics-input").value.trim();
 const timeStr = document.getElementById("time-input").value.trim();
@@ -1224,6 +1293,7 @@ saveLogs(logs);
 
 renderLogsList();
 renderStats();
+  const stats = calculateStreaks(logs);
 
 const userId = localStorage.getItem("userId") || "GUEST";
 const name = localStorage.getItem("name") || "Aspirant";
@@ -1239,7 +1309,9 @@ const url =
 `&topicsToday=${encodeURIComponent(topicsCountToday)}` +
 `&answersToday=${encodeURIComponent(answersToday)}` +
 `&pointsToday=${encodeURIComponent(pointsToday)}` +
-`&hasLogToday=${encodeURIComponent(hasLogToday)}`;
+`&hasLogToday=${encodeURIComponent(hasLogToday)}` +
+`&currentStreak=${encodeURIComponent(stats.currentStreak)}` +
+`&bestStreak=${encodeURIComponent(stats.bestStreak)}`;
 
 fetch(url)
 .then(r => r.json())
@@ -1288,7 +1360,7 @@ function renderRankUpdate(meta) {
       gap:6px;
     ">
       <span style="animation:pulse 1.5s infinite;">🟢</span>
-      LIVE DAILY RANKING
+      🟢 LIVE LEADERBOARD
     </span>
   `;
 }
