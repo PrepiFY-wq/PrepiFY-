@@ -46,6 +46,34 @@
     opacity: 1;
   }
 }
+
+.level-badge{
+padding:6px 12px;
+border-radius:999px;
+font-size:11px;
+font-weight:700;
+color:white;
+background:linear-gradient(135deg,#2563eb,#7c3aed);
+box-shadow:0 0 15px rgba(124,58,237,.35);
+animation:levelGlow 2s infinite;
+display:inline-block;
+margin-top:4px;
+}
+
+.level-up{
+background:linear-gradient(135deg,#f59e0b,#facc15);
+color:#111827;
+}
+
+.level-down{
+background:linear-gradient(135deg,#dc2626,#ef4444);
+}
+
+@keyframes levelGlow{
+0%{transform:scale(1)}
+50%{transform:scale(1.04)}
+100%{transform:scale(1)}
+}  
     header {
       background: linear-gradient(135deg, #0f172a, #1f5f8b);
       color: #fff;
@@ -820,7 +848,7 @@
         <!-- पथ प्रदर्शक सेक्शन END -->
 
       </section>
-
+      <div id="top-three-podium"></div>
       <!-- Right: Leaderboard & Rank -->
       <aside class="card">
         <div class="card-header">
@@ -843,7 +871,7 @@
               <tr>
                 <th>Rank</th>
                 <th>Candidate</th>
-                <th>Study hrs</th>
+                <th>Points</th>
                 <th>Days logged</th>
               </tr>
             </thead>
@@ -853,24 +881,6 @@
           <p class="rank-update-info" id="rank-note">
             Ranks are recalculated from your own total study hours and days logged.
           </p>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Rank badges</div>
-          <div class="badge-row">
-            <span class="badge-pill gold">
-              <span class="badge-icon">🏅</span> Gold Achiever (Top Rank)
-            </span>
-            <span class="badge-pill silver">
-              <span class="badge-icon">🥈</span> Silver Scholar
-            </span>
-            <span class="badge-pill bronze">
-              <span class="badge-icon">🥉</span> Bronze Aspirant
-            </span>
-            <span class="badge-pill">
-              <span class="badge-icon">📘</span> Consistent Learner
-            </span>
-          </div>
         </div>
 
         <p class="footer-note">
@@ -1070,7 +1080,8 @@
       });
   }
 
- function renderLeaderboardFromRows(rows) {
+function renderLeaderboardFromRows(rows) {
+
   const tbody = document.getElementById("leaderboard-body");
   tbody.innerHTML = "";
 
@@ -1088,83 +1099,72 @@
   const currentUserId = localStorage.getItem("userId");
 
   ranked.forEach(row => {
+
     const tr = document.createElement("tr");
+
     const rankClass =
       row.rank === 1 ? "rank-1" :
       row.rank === 2 ? "rank-2" :
-      row.rank === 3 ? "rank-3" : "rank-other";
+      row.rank === 3 ? "rank-3" :
+      "rank-other";
 
-    const nameLabel = row.userId === currentUserId ? "You" : (row.name || "Aspirant");
+    const rankDisplay =
+      row.rank === 1 ? "👑 #1" :
+      row.rank === 2 ? "🥈 #2" :
+      row.rank === 3 ? "🥉 #3" :
+      "#" + row.rank;
+
+    const nameLabel =
+      row.userId === currentUserId
+        ? "You"
+        : (row.name || "Aspirant");
 
     tr.innerHTML = `
-      <td><span class="rank-pill ${rankClass}">#${row.rank}</span></td>
-      <td>${nameLabel}</td>
+      <td>
+        <span class="rank-pill ${rankClass}">
+          ${rankDisplay}
+        </span>
+      </td>
+
+      <td>
+        <div style="font-weight:700;">
+          ${nameLabel}
+        </div>
+
+        <div class="level-badge">
+          ${row.levelName || "Seeker of Start"}
+        </div>
+      </td>
+
       <td>${row.totalPoints}</td>
-      <td>${row.levelName || "प्रारम्भिक साधक"}</td>
+
+      <td>${row.daysLogged}</td>
     `;
+
     tbody.appendChild(tr);
+
   });
 
-  const self = ranked.find(r => r.userId === currentUserId);
-  const rankNote = document.getElementById("rank-note");
+  const self =
+    ranked.find(r => r.userId === currentUserId);
+
+  const rankNote =
+    document.getElementById("rank-note");
 
   if (self) {
+
     rankNote.textContent =
-      `Your current rank: #${self.rank} out of ${ranked.length} aspirants • ${self.totalPoints} pts • Level: ${self.levelName || "प्रारम्भिक साधक"}`;
+      `Your Rank #${self.rank} • ${self.totalPoints} Points • ${self.levelName || "Seeker of Start"}`;
+
   } else {
+
     rankNote.textContent =
-      "Leaderboard uses total points and current levels from the server.";
+      "Live daily ranking based on points and consistency.";
+
   }
+
 }
 
-  // LOCAL BADGES + RANK NOTE (self-only view)
- function renderBadges(stats) {
-  const badgeRow = document.getElementById("badge-row");
-  badgeRow.innerHTML = "";
-
-  const score = stats.totalHours * 5 + stats.daysLogged * 2;
-  const rank = getRankFromScore(score);
-
-  if (rank === 1) {
-    badgeRow.innerHTML += `
-      <span class="badge-pill gold">
-        <span class="badge-icon">🏅</span> Gold Achiever
-      </span>
-    `;
-  } else if (rank === 2) {
-    badgeRow.innerHTML += `
-      <span class="badge-pill silver">
-        <span class="badge-icon">🥈</span> Silver Scholar
-      </span>
-    `;
-  } else if (rank === 3) {
-    badgeRow.innerHTML += `
-      <span class="badge-pill bronze">
-        <span class="badge-icon">🥉</span> Bronze Aspirant
-      </span>
-    `;
-  } else {
-    badgeRow.innerHTML += `
-      <span class="badge-pill">
-        <span class="badge-icon">📘</span> Consistent Learner
-      </span>
-    `;
-  }
-
-  if (stats.currentStreak >= 30) {
-    badgeRow.innerHTML += `
-      <span class="badge-pill">
-        <span class="badge-icon">🔥</span> 30-Day Streak
-      </span>
-    `;
-  } else if (stats.currentStreak >= 7) {
-    badgeRow.innerHTML += `
-      <span class="badge-pill">
-        <span class="badge-icon">🔥</span> 7-Day Streak
-      </span>
-    `;
-  }
-}
   function renderStats() {
     const logs = loadLogs();
     const meta = loadMeta();
@@ -1184,116 +1184,74 @@
         stats.bestStreak + " days";
     }
 
-    renderBadges(stats);
-    renderRankUpdate(meta);
+   renderRankUpdate(meta);
   }
 
-  function renderLogsList() {
-    const logs = loadLogs();
-    const list = document.getElementById("logs-list");
-    list.innerHTML = "";
-
-    const today = new Date();
-    const daysToShow = 7;
-    for (let i = 0; i < daysToShow; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const key = formatDateKey(d);
-      const log = logs[key];
-      if (!log) continue;
-
-      const item = document.createElement("li");
-      item.className = "target-item";
-
-      item.innerHTML = `
-        <div class="target-main">
-          <div><strong>${log.topics || "Targets logged"}</strong></div>
-          <div class="target-date">${formatDisplayDate(d)}</div>
-          <div>${(log.targets || "").slice(0, 160)}${
-            log.targets && log.targets.length > 160 ? "…" : ""
-          }</div>
-        </div>
-        <div class="target-meta">
-          <div><strong>${
-            (log.hours || 0).toFixed
-              ? log.hours.toFixed(1)
-              : Number(log.hours || 0).toFixed(1)
-          } hrs</strong></div>
-          <div>Logged</div>
-        </div>
-      `;
-      list.appendChild(item);
-    }
-
-    if (!list.children.length) {
-      const empty = document.createElement("li");
-      empty.className = "target-item";
-      empty.innerHTML =
-        '<div class="target-main"><div><strong>No logs yet.</strong></div><div class="target-date">Start with today and build your first streak.</div></div>';
-      list.appendChild(empty);
-    }
-  }
+function saveTodayLog() {
+const today = new Date();
+const key = formatDateKey(today);
+const logs = loadLogs();
 
 const targets = document.getElementById("targets-input").value.trim();
 const topics = document.getElementById("topics-input").value.trim();
 const timeStr = document.getElementById("time-input").value.trim();
 const hours = timeStr ? Number(timeStr) : 0;
 const answersToday = Number(
-  document.getElementById("answers-input").value || 0
+document.getElementById("answers-input").value || 0
 );
 
 if (!targets || !topics || !hours) {
-  alert("Please fill all fields: targets, topics and time before saving.");
-  return;
+alert("Please fill all fields: targets, topics and time before saving.");
+return;
 }
 
 const topicsCountToday = topics
-  ? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
-  : 0;
+? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
+: 0;
 
 const alreadyLoggedToday = !!logs[key];
 const hasLogToday = alreadyLoggedToday ? 0 : 1;
 
 logs[key] = {
-  targets,
-  topics,
-  hours: Number.isNaN(hours) ? 0 : hours,
-  topicsCount: topicsCountToday,
-  answersToday
+targets,
+topics,
+hours: Number.isNaN(hours) ? 0 : hours,
+topicsCount: topicsCountToday,
+answersToday
 };
-
-const pointsToday =
-  topicsCountToday + hours + (answersToday * 2);
 
 saveLogs(logs);
 
 renderLogsList();
 renderStats();
 
-  const userId = localStorage.getItem("userId") || "GUEST";
-  const name = localStorage.getItem("name") || "Aspirant";
+const userId = localStorage.getItem("userId") || "GUEST";
+const name = localStorage.getItem("name") || "Aspirant";
 
-  const pointsToday = topicsCountToday + hours + (answersToday * 2);
+const pointsToday =
+topicsCountToday + hours + (answersToday * 2);
 
-  const url = `${SCRIPT_URL}?action=updateLeaderboard` +
-    `&userId=${encodeURIComponent(userId)}` +
-    `&name=${encodeURIComponent(name)}` +
-    `&hoursToday=${encodeURIComponent(hours)}` +
-    `&topicsToday=${encodeURIComponent(topicsCountToday)}` +
-    `&answersToday=${encodeURIComponent(answersToday)}` +
-    `&pointsToday=${encodeURIComponent(pointsToday)}` +
-    `&hasLogToday=${encodeURIComponent(hasLogToday)}`;
+const url =
+`${SCRIPT_URL}?action=updateLeaderboard` +
+`&userId=${encodeURIComponent(userId)}` +
+`&name=${encodeURIComponent(name)}` +
+`&hoursToday=${encodeURIComponent(hours)}` +
+`&topicsToday=${encodeURIComponent(topicsCountToday)}` +
+`&answersToday=${encodeURIComponent(answersToday)}` +
+`&pointsToday=${encodeURIComponent(pointsToday)}` +
+`&hasLogToday=${encodeURIComponent(hasLogToday)}`;
 
-  fetch(url)
-    .then(r => r.json())
-    .then(() => {
-      loadLeaderboardFromServer();
-      alert("Today's log saved. Streaks, rank, badges and leaderboard updated.");
-    })
-    .catch(() => {
-      alert("Today's log saved locally. Leaderboard sync failed, please try again later.");
-    });
+fetch(url)
+.then(r => r.json())
+.then(() => {
+loadLeaderboardFromServer();
+alert("Today's log saved.");
+})
+.catch(() => {
+alert("Saved locally. Server sync failed.");
+});
 }
+
   function clearToday() {
     const today = new Date();
     const key = formatDateKey(today);
@@ -1312,8 +1270,9 @@ renderStats();
       }
     } else {
       document.getElementById("targets-input").value = "";
-      document.getElementById("topics-input").value = "";
-      document.getElementById("time-input").value = "";
+document.getElementById("topics-input").value = "";
+document.getElementById("time-input").value = "";
+document.getElementById("answers-input").value = "";
     }
   }
 
@@ -1332,6 +1291,28 @@ function renderRankUpdate(meta) {
       LIVE DAILY RANKING
     </span>
   `;
+}
+
+  function getLevelName(level) {
+  const levels = {
+    1:  "🌱 First Step Aspirant",
+    2:  "📚 Discipline Builder",
+    3:  "⚡ Consistency Champion",
+    4:  "🔥 Daily Momentum",
+    5:  "🛡️ Syllabus Conqueror",
+    6:  "🎯 Strategy Master",
+    7:  "✍️ Answer Writing Warrior",
+    8:  "🧠 Concept Architect",
+    9:  "🏹 Prelims Predator",
+    10: "📖 Mains Gladiator",
+    11: "⚖️ Ethics Navigator",
+    12: "🎤 Interview Challenger",
+    13: "🇮🇳 Nation Builder",
+    14: "⭐ Future Civil Servant",
+    15: "🏛️ LBSNAA Legend"
+  };
+
+  return levels[level] || "🌱 First Step Aspirant";
 }
   // Quotes
 
