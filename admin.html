@@ -5,6 +5,15 @@
   <title>PrepiFY - Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    .level-badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);
+  color:white;
+  font-size:11px;
+  font-weight:700;
+}
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -219,7 +228,6 @@
       Manage registrations • Verify students • Send notices
     </div>
   </header>
-
   <main>
     <!-- LEFT: Candidate list + leaderboard -->
     <section class="card">
@@ -245,16 +253,17 @@
       <!-- Leaderboard section -->
       <div class="section" style="margin-top:16px;">
         <h2 style="margin-bottom:8px;">UPSC_Tracker Leaderboard</h2>
+        <div id="adminTopPodium"></div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
                 <th>Rank</th>
-                <th>Name</th>
-                <th>Study hrs</th>
-                <th>Days</th>
-                <th>Topics</th>
-                <th>Streak</th>
+<th>Candidate</th>
+<th>Level</th>
+<th>Points</th>
+<th>Streak</th>
+<th>Status</th>
               </tr>
             </thead>
             <tbody id="leaderboardBody">
@@ -471,29 +480,109 @@
 
         leaderboardRows = data.rows.slice();
 
-        const ranked = leaderboardRows
-          .map(r => {
-            const totalHours = Number(r.totalHours || 0);
-            const daysLogged = Number(r.daysLogged || 0);
-            const topicsCount = Number(r.topicsCount || 0);
-            const score = totalHours * 5 + daysLogged * 2 + topicsCount * 1;
-            return { ...r, totalHours, daysLogged, topicsCount, score };
-          })
-          .sort((a, b) => b.score - a.score)
-          .map((r, idx) => ({ ...r, rank: idx + 1 }));
+const ranked = leaderboardRows
+  .map(r => ({
+    ...r,
+    totalPoints: Number(r.totalPoints || 0)
+  }))
+  .sort((a, b) => b.totalPoints - a.totalPoints)
+  .map((r, idx) => ({
+    ...r,
+    rank: idx + 1
+  }));
 
+const podium =
+
+  document.getElementById("adminTopPodium");
+
+
+
+if (podium && ranked.length >= 3) {
+
+
+
+ podium.innerHTML = `
+<div style="
+display:flex;
+justify-content:center;
+align-items:flex-end;
+gap:12px;
+margin-bottom:15px;
+">
+
+<div class="pill" style="padding:12px;">
+🥈 Rank #2<br>
+${ranked[1]?.name || 'N/A'}
+</div>
+
+<div class="pill" style="
+padding:18px;
+background:linear-gradient(135deg,#fbbf24,#f59e0b);
+color:black;
+font-weight:700;
+">
+👑 Rank #1<br>
+${ranked[0]?.name || 'N/A'}
+</div>
+
+<div class="pill" style="padding:12px;">
+🥉 Rank #3<br>
+${ranked[2]?.name || 'N/A'}
+</div>
+
+</div>
+`;
+
+}
         tbody.innerHTML = '';
 
         ranked.forEach(row => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${row.rank}</td>
-            <td>${row.name || ''}</td>
-            <td>${row.totalHours.toFixed(1)}</td>
-            <td>${row.daysLogged}</td>
-            <td>${row.topicsCount}</td>
-            <td>${row.currentStreak || 0} / ${row.bestStreak || 0}</td>
-          `;
+        const rankDisplay =
+  row.rank === 1 ? "👑 #1" :
+  row.rank === 2 ? "🥈 #2" :
+  row.rank === 3 ? "🥉 #3" :
+  "#" + row.rank;
+
+tr.innerHTML = `
+<td>${rankDisplay}</td>
+
+<td>
+  <div style="font-weight:700;">
+    ${row.name || ''}
+  </div>
+</td>
+
+<td>
+  <span class="level-badge">
+    Lv.${row.levelNumber || 1}
+  </span>
+  <div style="
+    font-size:11px;
+    color:#60a5fa;
+    margin-top:2px;">
+    ${row.levelName || 'Foundation Builder'}
+  </div>
+</td>
+
+<td>
+  ${row.totalPoints || 0}
+</td>
+
+<td>
+  🔥 ${row.currentStreak || 0}
+</td>
+
+<td>
+   ${
+  row.rank <= 3
+    ? '<span style="color:#22c55e">▲ Eligible</span>'
+    : row.rank > (ranked.length - 3)
+      ? '<span style="color:#ef4444">▼ Risk Zone</span>'
+      : '<span style="color:#60a5fa">● Stable</span>'
+}
+</td>
+`;
           tbody.appendChild(tr);
         });
 
@@ -542,26 +631,24 @@
         return;
       }
 
-      const ranked = leaderboardRows
-        .map(r => {
-          const totalHours = Number(r.totalHours || 0);
-          const daysLogged = Number(r.daysLogged || 0);
-          const topicsCount = Number(r.topicsCount || 0);
-          const score = totalHours * 5 + daysLogged * 2 + topicsCount * 1;
-          return { ...r, score };
-        })
-        .sort((a, b) => b.score - a.score)
-        .map((r, idx) => ({ ...r, rank: idx + 1 }));
-
+     const ranked = leaderboardRows
+  .map(r => ({
+    ...r,
+    totalPoints: Number(r.totalPoints || 0)
+  }))
+  .sort((a, b) => b.totalPoints - a.totalPoints)
+  .map((r, idx) => ({
+    ...r,
+    rank: idx + 1
+  }));
+      
       const self = ranked.find(r => r.userId == userId);
 
-      rankPill.textContent = self
-        ? `Rank: #${self.rank} (score ${self.score})`
-        : 'Rank: N/A';
+rankPill.textContent =
+  `🏆 Rank #${self ? self.rank : 'N/A'} • Lv.${lbRow.levelNumber || 1}`;
 
-      streakPill.textContent =
-        `Streak: ${lbRow.currentStreak || 0} days, Best: ${lbRow.bestStreak || 0}`;
-
+streakPill.textContent =
+  `🔥 ${lbRow.currentStreak || 0} Days`;
       streakControl.style.display = 'block';
       streakControl.dataset.userId = userId;
       document.getElementById('restoreCurrentStreak').value = lbRow.currentStreak || 0;
