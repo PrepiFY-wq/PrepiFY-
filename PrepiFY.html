@@ -1221,39 +1221,41 @@
     }
   }
 
- function saveTodayLog() {
-  const today = new Date();
-  const key = formatDateKey(today);
-  const logs = loadLogs();
+const targets = document.getElementById("targets-input").value.trim();
+const topics = document.getElementById("topics-input").value.trim();
+const timeStr = document.getElementById("time-input").value.trim();
+const hours = timeStr ? Number(timeStr) : 0;
+const answersToday = Number(
+  document.getElementById("answers-input").value || 0
+);
 
-  const targets = document.getElementById("targets-input").value.trim();
-  const topics = document.getElementById("topics-input").value.trim();
-  const timeStr = document.getElementById("time-input").value.trim();
-  const hours = timeStr ? Number(timeStr) : 0;
-   const answersToday = Number(document.getElementById("answers-input").value || 0);
+if (!targets || !topics || !hours) {
+  alert("Please fill all fields: targets, topics and time before saving.");
+  return;
+}
 
-  if (!targets || !topics || !hours) {
-    alert("Please fill all fields: targets, topics and time before saving.");
-    return;
-  }
+const topicsCountToday = topics
+  ? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
+  : 0;
 
-  const topicsCountToday = topics
-    ? topics.split(",").map(t => t.trim()).filter(t => t.length > 0).length
-    : 0;
+const alreadyLoggedToday = !!logs[key];
+const hasLogToday = alreadyLoggedToday ? 0 : 1;
 
-  const alreadyLoggedToday = !!logs[key];
-  const hasLogToday = alreadyLoggedToday ? 0 : 1;
+logs[key] = {
+  targets,
+  topics,
+  hours: Number.isNaN(hours) ? 0 : hours,
+  topicsCount: topicsCountToday,
+  answersToday
+};
 
-  logs[key] = {
-    targets,
-    topics,
-    hours: Number.isNaN(hours) ? 0 : hours,
-    topicsCount: topicsCountToday
-  };
-  saveLogs(logs);
+const pointsToday =
+  topicsCountToday + hours + (answersToday * 2);
 
-  renderLogsList();
-  renderStats();
+saveLogs(logs);
+
+renderLogsList();
+renderStats();
 
   const userId = localStorage.getItem("userId") || "GUEST";
   const name = localStorage.getItem("name") || "Aspirant";
